@@ -4,6 +4,7 @@ import os
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 
 
 class DevelopmentConfig(BaseConfig):
