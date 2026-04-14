@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -55,7 +54,7 @@ class Word(db.Model):
             'difficulty': self.difficulty,
             'example': self.example,
             'exampleTranslation': self.example_translation,
-            'imageUrl': f"{base_url}/{current_app.config['UPLOAD_FOLDER']}/{self.image_path}" if self.image_path else None,
+            'imageUrl': f"/uploads/{self.image_path}" if self.image_path else None,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
         }

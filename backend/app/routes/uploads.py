@@ -7,7 +7,7 @@ uploads_bp = Blueprint('uploads', __name__)
 
 def ensure_upload_folder():
     # Создание папки, если она не существует
-    os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs('uploads', exist_ok=True)
 
 
 @uploads_bp.route('/image', methods=['POST'])
@@ -27,7 +27,7 @@ def upload_image():
         ext = file.filename.rsplit('.', 1)[1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
 
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join('uploads', filename)
         file.save(filepath)
 
         return jsonify({
@@ -38,7 +38,8 @@ def upload_image():
 # Обработчик для возврата файлов из папки uploads
 @uploads_bp.route('/<path:filename>')
 def serve_file(filename):
+    upload_path = os.path.join(current_app.root_path, '..', 'uploads')
     return send_from_directory(
-        current_app.config['UPLOAD_FOLDER'],
+        upload_path,
         filename
     )
