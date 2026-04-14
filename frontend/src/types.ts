@@ -25,6 +25,8 @@ export type DictionaryEntry = {
   difficulty: Difficulty
   example: string
   exampleTranslation: string
+  imageUrl?: string | null
+  imagePath?: string | null
 }
 
 export type DictionaryDeck = {
