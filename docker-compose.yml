@@ -4,7 +4,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ../database.db:/app/database.db 
+      - ./backend/database.db:/app/database.db
+      - ./backend/uploads:/app/uploads
     ports:
       - "${BACKEND_PORT}:5000"
     env_file:

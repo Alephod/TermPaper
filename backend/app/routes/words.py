@@ -47,6 +47,7 @@ def create_word():
         difficulty=difficulty,
         example=(data.get('example') or '').strip(),
         example_translation=(data.get('exampleTranslation') or '').strip(),
+        image_path=data.get('imagePath'),
     )
 
     if data.get('id'):
@@ -90,6 +91,9 @@ def update_word(word_id):
 
     if 'exampleTranslation' in data:
         word.example_translation = (data['exampleTranslation'] or '').strip()
+
+    if 'imagePath' in data:
+        word.image_path = data['imagePath'] or None
 
     db.session.commit()
 

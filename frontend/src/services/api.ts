@@ -7,8 +7,9 @@ import type {
   Difficulty
 } from '../types'
 
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 const API_BASE_ENDPOINT = `${API_BASE_URL}/api`
+const UPLOAD_ENDPOINT = `${API_BASE_URL}/uploads`
 
 class ApiError extends Error {
   constructor(
@@ -159,6 +160,34 @@ class ApiClient {
     })
   }
 
+  // Upload API
+  async uploadImage(file: File): Promise<{ filename: string; path: string }> {
+    const url = `${UPLOAD_ENDPOINT}/image`
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = { error: 'Unknown error' }
+      }
+      throw new ApiError(
+        errorData.error || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    return await response.json()
+  }
+
   // Training Sessions API
   async getTrainingSessions(): Promise<TrainingSession[]> {
     return this.request<TrainingSession[]>('/training-sessions')
@@ -180,6 +209,7 @@ class ApiClient {
       difficulty: word.difficulty as Difficulty,
       example: word.example || '',
       exampleTranslation: word.exampleTranslation || word.example_translation || '',
+      imageUrl: word.imageUrl || word.image_url || null,
     }
   }
 
@@ -189,6 +219,7 @@ class ApiClient {
     difficulty: Difficulty
     example: string
     exampleTranslation: string
+    imagePath?: string | null
   } {
     return {
       term: entry.term,
@@ -196,6 +227,7 @@ class ApiClient {
       difficulty: entry.difficulty,
       example: entry.example,
       exampleTranslation: entry.exampleTranslation,
+      imagePath: entry.imagePath || null,
     }
   }
 

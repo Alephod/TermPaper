@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import type {
   DictionaryEntry,
   DictionaryDeck,
@@ -6,7 +6,7 @@ import type {
   FilterDifficulty
 } from '../types'
 import { dataService } from '../services/dataService'
-import { ApiError } from '../services/api'
+import { apiClient, ApiError } from '../services/api'
 import { Button, Input, Select } from '../components/ui'
 
 type DictionaryPageProps = {
@@ -24,6 +24,8 @@ type FormState = {
   example: string
   exampleTranslation: string
   difficulty: Difficulty
+  imageUrl: string | null
+  imageFile: File | null
 }
 
 const buildEmptyFormState = (): FormState => ({
@@ -32,7 +34,9 @@ const buildEmptyFormState = (): FormState => ({
   translation: '',
   example: '',
   exampleTranslation: '',
-  difficulty: 'easy'
+  difficulty: 'easy',
+  imageUrl: null,
+  imageFile: null
 })
 
 export const DictionaryPage: React.FC<DictionaryPageProps> = ({
@@ -46,6 +50,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   const [formState, setFormState] = useState<FormState>(buildEmptyFormState())
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filteredEntries = useMemo(() => {
     if (filter === 'all') {
@@ -65,8 +71,32 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       translation: entry.translation,
       example: entry.example,
       exampleTranslation: entry.exampleTranslation,
-      difficulty: entry.difficulty
+      difficulty: entry.difficulty,
+      imageUrl: entry.imageUrl || null,
+      imageFile: null
     })
+    setImagePreview(entry.imageUrl || null)
+  }
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setFormState(prev => ({ ...prev, imageFile: file }))
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemoveImage = (): void => {
+    setFormState(prev => ({ ...prev, imageFile: null, imageUrl: null }))
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const handleDelete = async (id: string): Promise<void> => {
@@ -123,29 +153,30 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       setLoading(true)
       setError(null)
 
-      if (formState.id) {
-        // Update existing word
-        const updated = await dataService.updateWord(formState.id, {
-          term: formState.term.trim(),
-          translation: formState.translation.trim(),
-          example: formState.example.trim(),
-          exampleTranslation: formState.exampleTranslation.trim(),
-          difficulty: formState.difficulty
-        })
+      let imagePath = formState.imageUrl
 
+      if (formState.imageFile) {
+        const uploadResult = await apiClient.uploadImage(formState.imageFile)
+        imagePath = uploadResult.filename
+      }
+
+      const wordData = {
+        term: formState.term.trim(),
+        translation: formState.translation.trim(),
+        example: formState.example.trim(),
+        exampleTranslation: formState.exampleTranslation.trim(),
+        difficulty: formState.difficulty,
+        imagePath: imagePath
+      }
+
+      if (formState.id) {
+        const updated = await dataService.updateWord(formState.id, wordData)
         const newDictionary = dictionary.map(entry =>
           entry.id === formState.id ? updated : entry
         )
         onUpdateDictionary(newDictionary)
       } else {
-        // Create new word
-        const newEntry = await dataService.createWord({
-          term: formState.term.trim(),
-          translation: formState.translation.trim(),
-          example: formState.example.trim(),
-          exampleTranslation: formState.exampleTranslation.trim(),
-          difficulty: formState.difficulty
-        })
+        const newEntry = await dataService.createWord(wordData)
 
         // Проверяем, что слово еще не добавлено в UI
         if (!dictionary.some(entry => entry.id === newEntry.id)) {
@@ -154,6 +185,10 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       }
 
       setFormState(buildEmptyFormState())
+      setImagePreview(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     } catch (err) {
       console.error('Failed to save word:', err)
       if (err instanceof ApiError) {
@@ -287,7 +322,37 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
               />
             </div>
 
-            <div className='dictionary-form__row dictionary-form__row--last'>
+            <div className='dictionary-form__row'>
+              <div className='dictionary-form__image-upload'>
+                <label className='dictionary-form__label'>Изображение</label>
+                <div className='dictionary-form__image-area'>
+                  {imagePreview ? (
+                    <div className='dictionary-form__image-preview'>
+                      <img src={imagePreview} alt='Preview' />
+                      <button
+                        type='button'
+                        className='dictionary-form__image-remove'
+                        onClick={handleRemoveImage}
+                        disabled={loading}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className='dictionary-form__image-placeholder'>
+                      <input
+                        ref={fileInputRef}
+                        type='file'
+                        accept='image/*'
+                        onChange={handleImageSelect}
+                        disabled={loading}
+                        className='dictionary-form__file-input'
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <Select
                 label='Сложность'
                 value={formState.difficulty}
@@ -305,12 +370,17 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 ]}
                 fullWidth
               />
+            </div>
 
+            <div className='dictionary-form__row dictionary-form__row--last'>
               <div className='dictionary-form__actions'>
                 <Button
                   type='button'
                   variant='secondary'
-                  onClick={() => setFormState(buildEmptyFormState())}
+                  onClick={() => {
+                    setFormState(buildEmptyFormState())
+                    setImagePreview(null)
+                  }}
                   disabled={loading}
                 >
                   Отмена
@@ -384,10 +454,17 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
             {filteredEntries.map(entry => (
               <div key={entry.id} className='dictionary-entry'>
                 <div className='dictionary-entry__main'>
-                  <div className='dictionary-entry__term'>{entry.term}</div>
-                  <div className='dictionary-entry__translation'>{entry.translation}</div>
-                  <div className={`dictionary-entry__difficulty dictionary-entry__difficulty--${entry.difficulty}`}>
-                    {entry.difficulty}
+                  {entry.imageUrl && (
+                    <div className='dictionary-entry__image'>
+                      <img src={import.meta.env.VITE_API_URL + entry.imageUrl} alt={entry.term} />
+                    </div>
+                  )}
+                  <div className='dictionary-entry__content'>
+                    <div className='dictionary-entry__term'>{entry.term}</div>
+                    <div className='dictionary-entry__translation'>{entry.translation}</div>
+                    <div className={`dictionary-entry__difficulty dictionary-entry__difficulty--${entry.difficulty}`}>
+                      {entry.difficulty}
+                    </div>
                   </div>
                 </div>
 

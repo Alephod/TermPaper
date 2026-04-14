@@ -14,11 +14,6 @@ class DevelopmentConfig(BaseConfig):
     )
 
 
-class TestingConfig(BaseConfig):
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-
-
 class ProductionConfig(BaseConfig):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
@@ -29,7 +24,6 @@ class ProductionConfig(BaseConfig):
 
 config = {
     'development': DevelopmentConfig,
-    'testing': TestingConfig,
     'production': ProductionConfig,
     'default': DevelopmentConfig,
 }

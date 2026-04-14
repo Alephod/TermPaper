@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -42,21 +41,24 @@ class Word(db.Model):
     difficulty = db.Column(db.String(10), nullable=False, default='easy')
     example = db.Column(db.String(500), nullable=False, default='')
     example_translation = db.Column(db.String(500), nullable=False, default='')
+    image_path = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=_utcnow)
     updated_at = db.Column(db.DateTime, nullable=False,
                            default=_utcnow, onupdate=_utcnow)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, base_url=''):
+        result = {
             'id': self.id,
             'term': self.term,
             'translation': self.translation,
             'difficulty': self.difficulty,
             'example': self.example,
             'exampleTranslation': self.example_translation,
+            'imageUrl': f"/uploads/{self.image_path}" if self.image_path else None,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
         }
+        return result
 
 
 class Deck(db.Model):
