@@ -7,12 +7,11 @@ import type {
   TrainingSession,
   DictionaryDeck
 } from './types'
-import { Layout } from './components/ui'
-import { HomePage } from './pages/HomePage'
-import { TrainingPage } from './pages/TrainingPage'
-import { DictionaryPage } from './pages/DictionaryPage'
-import { StatisticsPage } from './pages/StatisticsPage'
-import { DecksPage } from './pages/DecksPage'
+import { Layout } from './components/layout/Layout'
+import { HomePage } from './pages/home/HomePage'
+import { TrainingPage } from './pages/training/TrainingPage'
+import { DictionaryPage } from './pages/dictionary/DictionaryPage'
+import { DecksPage } from './pages/decks/DecksPage'
 
 export const App: React.FC = () => {
   const navigate = useNavigate()
@@ -27,18 +26,18 @@ export const App: React.FC = () => {
       try {
         setLoading(true)
         setError(null)
-        
+
         const { words, decks: loadedDecks, sessions } = await dataService.initializeData()
-        
+
         setDictionary(words)
         setDecks(loadedDecks)
         setHistory(sessions)
       } catch (err) {
         console.error('Failed to initialize data:', err)
         if (err instanceof ApiError) {
-          setError(`API Error: ${err.message}`)
+          setError(`Ошибка API: ${err.message}`)
         } else {
-          setError('Failed to load data from server')
+          setError('Не удалось загрузить данные с сервера')
         }
       } finally {
         setLoading(false)
@@ -51,7 +50,7 @@ export const App: React.FC = () => {
   const handleStartTraining = (deckId?: string): void => {
     // Clear any saved training session - start fresh
     localStorage.removeItem('training_session')
-    
+
     if (deckId) {
       localStorage.setItem('currentDeckId', deckId)
     } else {
@@ -65,7 +64,7 @@ export const App: React.FC = () => {
   ): Promise<void> => {
     try {
       setDictionary(entries)
-      
+
       const cleanedDecks = decks.map(deck => ({
         ...deck,
         wordIds: deck.wordIds.filter(wordId =>
@@ -75,7 +74,7 @@ export const App: React.FC = () => {
       setDecks(cleanedDecks)
     } catch (err) {
       console.error('Failed to update dictionary:', err)
-      setError('Failed to update dictionary')
+      setError('Не удалось обновить словарь')
     }
   }
 
@@ -86,7 +85,7 @@ export const App: React.FC = () => {
       setDecks(updatedDecks)
     } catch (err) {
       console.error('Failed to update decks:', err)
-      setError('Failed to update decks')
+      setError('Не удалось обновить колоды')
     }
   }
 
@@ -98,7 +97,7 @@ export const App: React.FC = () => {
       setHistory(prev => [createdSession, ...prev])
     } catch (err) {
       console.error('Failed to save training session:', err)
-      setError('Failed to save training session')
+      setError('Не удалось сохранить сессию обучения')
     }
   }
 
@@ -166,15 +165,6 @@ export const App: React.FC = () => {
               onUpdateDictionary={handleUpdateDictionary}
               onUpdateDecks={handleUpdateDecks}
               onStartTraining={handleStartTraining}
-            />
-          }
-        />
-        <Route
-          path="/statistics"
-          element={
-            <StatisticsPage
-              dictionary={dictionary}
-              history={history}
             />
           }
         />

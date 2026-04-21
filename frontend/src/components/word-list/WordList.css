@@ -1,0 +1,153 @@
+.word-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.word-list__empty {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border-subtle);
+}
+
+.word-list__empty-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.word-list__empty h3 {
+  font-size: 1.5rem;
+  margin: 0 0 12px;
+  color: var(--text-main);
+}
+
+.word-list__empty p {
+  color: var(--text-muted);
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.word-entry {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s ease;
+}
+
+.word-entry:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.word-entry__main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.word-entry__image {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.word-entry__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.word-entry__content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.word-entry__term {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.word-entry__translation {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  flex: 2;
+}
+
+.word-entry__difficulty {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.word-entry__difficulty--easy {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.word-entry__difficulty--medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.word-entry__difficulty--hard {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.word-entry__examples {
+  margin-bottom: 16px;
+  padding-left: 16px;
+  border-left: 3px solid var(--border-subtle);
+}
+
+.word-entry__example {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.word-entry__example-label {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.word-entry__example-translation {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.word-entry__actions {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .word-entry__main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .word-entry__content {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .word-entry__actions {
+    flex-direction: column;
+  }
+}

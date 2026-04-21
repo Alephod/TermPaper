@@ -1,0 +1,268 @@
+.deck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.deck-list__empty {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border-subtle);
+}
+
+.deck-list__empty-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.deck-list__empty h3 {
+  font-size: 1.5rem;
+  margin: 0 0 12px;
+  color: var(--text-main);
+}
+
+.deck-list__empty p {
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Deck Card */
+.deck-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.deck-card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.deck-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.deck-card__info {
+  flex: 1;
+}
+
+.deck-card__name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.deck-card__name:hover {
+  color: var(--accent);
+}
+
+.deck-card__name-input {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-main);
+  margin: 0 0 8px;
+}
+
+.deck-card__name-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.deck-card__stats {
+  display: flex;
+  gap: 16px;
+}
+
+.deck-card__word-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: var(--accent-soft);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.deck-card__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.deck-card__content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Available Words */
+.deck-card__add-existing {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 32px;
+}
+
+.deck-card__add-existing-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text-main);
+}
+
+.deck-card__available-words {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.deck-card__available-word {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.deck-card__available-word:hover {
+  border-color: var(--accent);
+}
+
+.deck-card__available-word-term {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.deck-card__available-word-translation {
+  flex: 2;
+  color: var(--text-muted);
+}
+
+.deck-card__more-words {
+  text-align: center;
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Words in Deck */
+.deck-card__words-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text-main);
+}
+
+.deck-card__empty-words {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.deck-card__words-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deck-card__word {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.deck-card__word:hover {
+  border-color: var(--accent);
+}
+
+.deck-card__word-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deck-card__word-term {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.deck-card__word-translation {
+  flex: 2;
+  color: var(--text-muted);
+}
+
+.deck-card__word-difficulty {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.deck-card__word-difficulty--easy {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.deck-card__word-difficulty--medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.deck-card__word-difficulty--hard {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .deck-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .deck-card__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .deck-card__word-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .deck-card__available-word {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

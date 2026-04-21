@@ -1,0 +1,133 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout__header {
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(18px);
+  background: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.layout__header-content {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.layout__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layout__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.layout__nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.layout__nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  min-width: 60px;
+  text-decoration: none;
+}
+
+.layout__nav-button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.layout__nav-button--active {
+  background: var(--accent);
+  color: white;
+}
+
+.layout__nav-icon {
+  font-size: 1.2rem;
+}
+
+.layout__main {
+  margin-top: 20px;
+  flex: 1;
+}
+
+.layout__error-banner {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-md);
+  margin: 16px 0;
+}
+
+.layout__error-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.layout__error-icon {
+  font-size: 1.2rem;
+}
+
+.layout__error-text {
+  flex: 1;
+}
+
+.layout__error-text p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.layout__error-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.layout__error-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 840px) {
+  .layout__header {
+    padding: 12px 16px;
+  }
+
+  .layout__main {
+    padding: 16px;
+  }
+}

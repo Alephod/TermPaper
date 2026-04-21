@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import type { DictionaryEntry } from '../../types'
+import './WordOfTheDayWidget.css'
 
 type WordOfTheDayWidgetProps = {
   dictionary: DictionaryEntry[]
@@ -45,14 +46,23 @@ export const WordOfTheDayWidget: React.FC<
 
   return (
     <div className='word-day'>
-      <h3 className='word-day__title'>Слово дня</h3>
-      <p className='word-day__term'>{wordOfTheDay.term}</p>
-      <p className='word-day__translation'>
-        {wordOfTheDay.translation}
-      </p>
-      <p className='word-day__difficulty'>
-        Сложность: {wordOfTheDay.difficulty}
-      </p>
+      <div className='word-day__card'>
+        <div className='word-day__card-front'>
+          <div className='word-day__label'>Слово дня</div>
+          <div className='word-day__term'>
+            {wordOfTheDay.term}
+          </div>
+          <div className='word-day__hint'>Наведите, чтобы увидеть перевод</div>
+        </div>
+        <div className='word-day__card-back'>
+          <div className='word-day__translation'>
+            {wordOfTheDay.translation}
+          </div>
+          <div className='word-day__example'>
+            {wordOfTheDay.example || 'I eat an apple every morning'}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

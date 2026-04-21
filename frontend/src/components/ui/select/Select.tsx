@@ -1,4 +1,5 @@
 import React, { SelectHTMLAttributes, forwardRef } from 'react'
+import './Select.css'
 
 type SelectOption = {
   value: string
