@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo } from 'react'
 import type {
   DictionaryEntry,
   DictionaryDeck,
@@ -10,6 +10,7 @@ import { apiClient, ApiError } from '../../services/api'
 import { Button } from '../../components/ui/button/Button'
 import { Input } from '../../components/ui/input/Input'
 import { Select } from '../../components/ui/select/Select'
+import { ImageUpload } from '../../components/ui/image-upload/ImageUpload'
 import { WordList } from '../../components/word-list/WordList'
 import './DictionaryPage.css'
 
@@ -55,7 +56,6 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filteredEntries = useMemo(() => {
     if (filter === 'all') {
@@ -82,10 +82,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
     setImagePreview(entry.imageUrl || null)
   }
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  const handleImageSelect = (file: File): void => {
     setFormState(prev => ({ ...prev, imageFile: file }))
 
     const reader = new FileReader()
@@ -98,9 +95,6 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   const handleRemoveImage = (): void => {
     setFormState(prev => ({ ...prev, imageFile: null, imageUrl: null }))
     setImagePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }
 
   const handleDelete = async (id: string): Promise<void> => {
@@ -190,9 +184,6 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
 
       setFormState(buildEmptyFormState())
       setImagePreview(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
     } catch (err) {
       console.error('Failed to save word:', err)
       if (err instanceof ApiError) {
@@ -264,116 +255,94 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
 
         <div className='dictionary__form-card'>
           <form className='dictionary-form' onSubmit={handleSubmit}>
-            <div className='dictionary-form__row'>
-              <Input
-                label='Слово *'
-                value={formState.term}
-                onChange={event =>
-                  setFormState(previous => ({
-                    ...previous,
-                    term: event.target.value
-                  }))
-                }
-                placeholder='Введите слово'
-                disabled={loading}
-                required
-                fullWidth
-              />
+            <div className='dictionary-form__content'>
+              <div className='dictionary-form__left-column'>
+                <Input
+                  label='Слово *'
+                  value={formState.term}
+                  onChange={event =>
+                    setFormState(previous => ({
+                      ...previous,
+                      term: event.target.value
+                    }))
+                  }
+                  placeholder='Введите слово'
+                  disabled={loading}
+                  required
+                  fullWidth
+                />
 
-              <Input
-                label='Перевод *'
-                value={formState.translation}
-                onChange={event =>
-                  setFormState(previous => ({
-                    ...previous,
-                    translation: event.target.value
-                  }))
-                }
-                placeholder='Введите перевод'
-                disabled={loading}
-                required
-                fullWidth
-              />
-            </div>
+                <Input
+                  label='Перевод *'
+                  value={formState.translation}
+                  onChange={event =>
+                    setFormState(previous => ({
+                      ...previous,
+                      translation: event.target.value
+                    }))
+                  }
+                  placeholder='Введите перевод'
+                  disabled={loading}
+                  required
+                  fullWidth
+                />
 
-            <div className='dictionary-form__row'>
-              <Input
-                label='Пример'
-                value={formState.example}
-                onChange={event =>
-                  setFormState(previous => ({
-                    ...previous,
-                    example: event.target.value
-                  }))
-                }
-                placeholder='Пример использования'
-                disabled={loading}
-                fullWidth
-              />
+                <Input
+                  label='Пример'
+                  value={formState.example}
+                  onChange={event =>
+                    setFormState(previous => ({
+                      ...previous,
+                      example: event.target.value
+                    }))
+                  }
+                  placeholder='Пример использования'
+                  disabled={loading}
+                  fullWidth
+                />
 
-              <Input
-                label='Перевод примера'
-                value={formState.exampleTranslation}
-                onChange={event =>
-                  setFormState(previous => ({
-                    ...previous,
-                    exampleTranslation: event.target.value
-                  }))
-                }
-                placeholder='Перевод примера'
-                disabled={loading}
-                fullWidth
-              />
-            </div>
+                <Input
+                  label='Перевод примера'
+                  value={formState.exampleTranslation}
+                  onChange={event =>
+                    setFormState(previous => ({
+                      ...previous,
+                      exampleTranslation: event.target.value
+                    }))
+                  }
+                  placeholder='Перевод примера'
+                  disabled={loading}
+                  fullWidth
+                />
 
-            <div className='dictionary-form__row'>
-              <div className='dictionary-form__image-upload'>
-                <label className='dictionary-form__label'>Изображение</label>
-                <div className='dictionary-form__image-area'>
-                  {imagePreview ? (
-                    <div className='dictionary-form__image-preview'>
-                      <img src={imagePreview} alt='Preview' />
-                      <button
-                        type='button'
-                        className='dictionary-form__image-remove'
-                        onClick={handleRemoveImage}
-                        disabled={loading}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <div className='dictionary-form__image-placeholder'>
-                      <input
-                        ref={fileInputRef}
-                        type='file'
-                        accept='image/*'
-                        onChange={handleImageSelect}
-                        disabled={loading}
-                        className='dictionary-form__file-input'
-                      />
-                    </div>
-                  )}
-                </div>
+                <Select
+                  label='Сложность'
+                  value={formState.difficulty}
+                  onChange={event =>
+                    setFormState(previous => ({
+                      ...previous,
+                      difficulty: event.target.value as Difficulty
+                    }))
+                  }
+                  disabled={loading}
+                  options={[
+                    { value: 'easy', label: 'Легкая' },
+                    { value: 'medium', label: 'Средняя' },
+                    { value: 'hard', label: 'Сложная' }
+                  ]}
+                  fullWidth
+                />
               </div>
 
-              <Select
-                label='Сложность'
-                value={formState.difficulty}
-                onChange={event =>
-                  setFormState(previous => ({
-                    ...previous,
-                    difficulty: event.target.value as Difficulty
-                  }))
-                }
-                disabled={loading}
-                options={[
-                  { value: 'easy', label: 'Легкая' },
-                  { value: 'medium', label: 'Средняя' },
-                  { value: 'hard', label: 'Сложная' }
-                ]}
-                fullWidth
-              />
+              <div className='dictionary-form__right-column'>
+                <ImageUpload
+                  label='Изображение'
+                  previewUrl={imagePreview}
+                  onImageSelect={handleImageSelect}
+                  onImageRemove={handleRemoveImage}
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div className='dictionary-form__row dictionary-form__row--last'>
