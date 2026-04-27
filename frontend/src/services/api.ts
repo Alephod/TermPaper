@@ -1,21 +1,32 @@
 import type {
-  Word,
   Deck,
-  DictionaryEntry,
-  TrainingSession,
   DictionaryDeck,
-  Difficulty
+  DictionaryEntry,
+  Difficulty,
+  TrainingSession,
+  Word
 } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+export const API_BASE_URL =
+	import.meta.env.VITE_API_URL || 'http://localhost:5000'
 const API_BASE_ENDPOINT = `${API_BASE_URL}/api`
 const UPLOAD_ENDPOINT = `${API_BASE_URL}/uploads`
+
+export const extractRelativeImagePath = (
+  fullUrl: string | null
+): string | null => {
+  if (!fullUrl) return null
+  if (fullUrl.startsWith(API_BASE_URL)) {
+    return fullUrl.slice(API_BASE_URL.length)
+  }
+  return fullUrl
+}
 
 class ApiError extends Error {
   constructor(
     message: string,
-    public status?: number,
-    public response?: any
+		public status?: number,
+		public response?: any
   ) {
     super(message)
     this.name = 'ApiError'
@@ -36,13 +47,13 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...options.headers
     }
 
     try {
       const response = await fetch(url, {
         ...options,
-        headers,
+        headers
       })
 
       if (!response.ok) {
@@ -88,26 +99,26 @@ class ApiClient {
   async createWord(word: Omit<Word, 'id'>): Promise<Word> {
     return this.request<Word>('/words', {
       method: 'POST',
-      body: JSON.stringify(word),
+      body: JSON.stringify(word)
     })
   }
 
   async updateWord(id: string, updates: Partial<Word>): Promise<Word> {
     return this.request<Word>(`/words/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updates)
     })
   }
 
   async deleteWord(id: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/words/${id}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     })
   }
 
   async clearWords(): Promise<{ message: string }> {
     return this.request<{ message: string }>('/words', {
-      method: 'DELETE',
+      method: 'DELETE'
     })
   }
 
@@ -123,40 +134,49 @@ class ApiClient {
   async createDeck(deck: { name: string }): Promise<Deck> {
     return this.request<Deck>('/decks', {
       method: 'POST',
-      body: JSON.stringify(deck),
+      body: JSON.stringify(deck)
     })
   }
 
-  async updateDeck(id: string, updates: { name?: string; wordIds?: string[] }): Promise<Deck> {
+  async updateDeck(
+    id: string,
+    updates: { name?: string; wordIds?: string[] }
+  ): Promise<Deck> {
     return this.request<Deck>(`/decks/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updates)
     })
   }
 
   async deleteDeck(id: string): Promise<void> {
     return this.request<void>(`/decks/${id}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     })
   }
 
-  async createWordInDeck(deckId: string, word: Omit<Word, 'id'>): Promise<{ word: Word; deck: Deck }> {
-    return this.request<{ word: Word; deck: Deck }>(`/decks/${deckId}/words/new`, {
-      method: 'POST',
-      body: JSON.stringify(word),
-    })
+  async createWordInDeck(
+    deckId: string,
+    word: Omit<Word, 'id'>
+  ): Promise<{ word: Word; deck: Deck }> {
+    return this.request<{ word: Word; deck: Deck }>(
+      `/decks/${deckId}/words/new`,
+      {
+        method: 'POST',
+        body: JSON.stringify(word)
+      }
+    )
   }
 
   async addExistingWordToDeck(deckId: string, wordId: string): Promise<Deck> {
     return this.request<Deck>(`/decks/${deckId}/words`, {
       method: 'POST',
-      body: JSON.stringify({ wordId }),
+      body: JSON.stringify({ wordId })
     })
   }
 
   async removeWordFromDeck(deckId: string, wordId: string): Promise<void> {
     return this.request<void>(`/decks/${deckId}/words/${wordId}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     })
   }
 
@@ -168,7 +188,7 @@ class ApiClient {
 
     const response = await fetch(url, {
       method: 'POST',
-      body: formData,
+      body: formData
     })
 
     if (!response.ok) {
@@ -193,41 +213,51 @@ class ApiClient {
     return this.request<TrainingSession[]>('/training-sessions')
   }
 
-  async createTrainingSession(session: Omit<TrainingSession, 'id' | 'date'>): Promise<TrainingSession> {
+  async createTrainingSession(
+    session: Omit<TrainingSession, 'id' | 'date'>
+  ): Promise<TrainingSession> {
     return this.request<TrainingSession>('/training-sessions', {
       method: 'POST',
-      body: JSON.stringify(session),
+      body: JSON.stringify(session)
     })
   }
 
   // Helper methods to convert between API types and frontend types
   wordToDictionaryEntry(word: any): DictionaryEntry {
+    const imagePath = word.imageUrl || word.image_url || null
+    // Convert relative paths to full URLs
+    const fullImageUrl =
+			imagePath && imagePath.startsWith('/')
+			  ? `${API_BASE_URL}${imagePath}`
+			  : imagePath
+
     return {
       id: word.id,
       term: word.term,
       translation: word.translation,
       difficulty: word.difficulty as Difficulty,
       example: word.example || '',
-      exampleTranslation: word.exampleTranslation || word.example_translation || '',
-      imageUrl: word.imageUrl || word.image_url || null,
+      exampleTranslation:
+				word.exampleTranslation || word.example_translation || '',
+      imageUrl: fullImageUrl
     }
   }
 
   dictionaryEntryToWord(entry: Omit<DictionaryEntry, 'id'>): {
-    term: string
-    translation: string
-    difficulty: Difficulty
-    example: string
-    exampleTranslation: string
-    imagePath?: string | null
-  } {
+		term: string;
+		translation: string;
+		difficulty: Difficulty;
+		example: string;
+		exampleTranslation: string;
+		imagePath?: string | null;
+	} {
     return {
       term: entry.term,
       translation: entry.translation,
       difficulty: entry.difficulty,
       example: entry.example,
       exampleTranslation: entry.exampleTranslation,
-      imagePath: entry.imagePath || null,
+      imagePath: entry.imagePath || null
     }
   }
 
@@ -235,7 +265,7 @@ class ApiClient {
     return {
       id: deck.id,
       name: deck.name,
-      wordIds: deck.wordIds || [],
+      wordIds: deck.wordIds || []
     }
   }
 
@@ -247,13 +277,15 @@ class ApiClient {
       correctAnswers: session.correctAnswers,
       accuracy: session.accuracy,
       correctWordIds: session.correctWordIds || [],
-      wrongWordIds: session.wrongWordIds || [],
+      wrongWordIds: session.wrongWordIds || []
     }
   }
 
-  dictionaryDeckToDeck(deck: Omit<DictionaryDeck, 'id' | 'wordIds'>): { name: string } {
+  dictionaryDeckToDeck(deck: Omit<DictionaryDeck, 'id' | 'wordIds'>): {
+		name: string;
+	} {
     return {
-      name: deck.name,
+      name: deck.name
     }
   }
 }

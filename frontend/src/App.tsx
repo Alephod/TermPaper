@@ -1,18 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { dataService } from './services/dataService'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Layout } from './components/layout/Layout'
+import { DecksPage } from './pages/decks/DecksPage'
+import { DictionaryPage } from './pages/dictionary/DictionaryPage'
+import { HomePage } from './pages/home/HomePage'
+import { TrainingPage } from './pages/training/TrainingPage'
 import { ApiError } from './services/api'
-import type {
-  DictionaryEntry,
-  TrainingSession,
-  DictionaryDeck
-} from './types'
-import { Layout } from './components/ui'
-import { HomePage } from './pages/HomePage'
-import { TrainingPage } from './pages/TrainingPage'
-import { DictionaryPage } from './pages/DictionaryPage'
-import { StatisticsPage } from './pages/StatisticsPage'
-import { DecksPage } from './pages/DecksPage'
+import { dataService } from './services/dataService'
+import type { DictionaryDeck, DictionaryEntry, TrainingSession } from './types'
 
 export const App: React.FC = () => {
   const navigate = useNavigate()
@@ -27,18 +23,22 @@ export const App: React.FC = () => {
       try {
         setLoading(true)
         setError(null)
-        
-        const { words, decks: loadedDecks, sessions } = await dataService.initializeData()
-        
+
+        const {
+          words,
+          decks: loadedDecks,
+          sessions
+        } = await dataService.initializeData()
+
         setDictionary(words)
         setDecks(loadedDecks)
         setHistory(sessions)
       } catch (err) {
         console.error('Failed to initialize data:', err)
         if (err instanceof ApiError) {
-          setError(`API Error: ${err.message}`)
+          setError(`Ошибка API: ${err.message}`)
         } else {
-          setError('Failed to load data from server')
+          setError('Не удалось загрузить данные с сервера')
         }
       } finally {
         setLoading(false)
@@ -51,7 +51,7 @@ export const App: React.FC = () => {
   const handleStartTraining = (deckId?: string): void => {
     // Clear any saved training session - start fresh
     localStorage.removeItem('training_session')
-    
+
     if (deckId) {
       localStorage.setItem('currentDeckId', deckId)
     } else {
@@ -65,17 +65,17 @@ export const App: React.FC = () => {
   ): Promise<void> => {
     try {
       setDictionary(entries)
-      
-      const cleanedDecks = decks.map(deck => ({
+
+      const cleanedDecks = decks.map((deck) => ({
         ...deck,
-        wordIds: deck.wordIds.filter(wordId =>
-          entries.some(entry => entry.id === wordId)
+        wordIds: deck.wordIds.filter((wordId) =>
+          entries.some((entry) => entry.id === wordId)
         )
       }))
       setDecks(cleanedDecks)
     } catch (err) {
       console.error('Failed to update dictionary:', err)
-      setError('Failed to update dictionary')
+      setError('Не удалось обновить словарь')
     }
   }
 
@@ -86,7 +86,7 @@ export const App: React.FC = () => {
       setDecks(updatedDecks)
     } catch (err) {
       console.error('Failed to update decks:', err)
-      setError('Failed to update decks')
+      setError('Не удалось обновить колоды')
     }
   }
 
@@ -95,10 +95,10 @@ export const App: React.FC = () => {
   ): Promise<void> => {
     try {
       const createdSession = await dataService.createTrainingSession(session)
-      setHistory(prev => [createdSession, ...prev])
+      setHistory((prev) => [createdSession, ...prev])
     } catch (err) {
       console.error('Failed to save training session:', err)
-      setError('Failed to save training session')
+      setError('Не удалось сохранить сессию обучения')
     }
   }
 
@@ -123,7 +123,7 @@ export const App: React.FC = () => {
     <Layout isDictionaryError={!!error} isHistoryError={!!error}>
       <Routes>
         <Route
-          path="/"
+          path='/'
           element={
             <HomePage
               dictionary={dictionary}
@@ -134,19 +134,18 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="/training"
+          path='/training'
           element={
             <TrainingPage
               dictionary={dictionary}
               decks={decks}
               onFinishSession={handleFinishSession}
               onGoToDictionary={() => navigate('/dictionary')}
-              onGoToStatistics={() => navigate('/statistics')}
             />
           }
         />
         <Route
-          path="/dictionary"
+          path='/dictionary'
           element={
             <DictionaryPage
               dictionary={dictionary}
@@ -158,7 +157,7 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="/decks"
+          path='/decks'
           element={
             <DecksPage
               dictionary={dictionary}
@@ -169,16 +168,7 @@ export const App: React.FC = () => {
             />
           }
         />
-        <Route
-          path="/statistics"
-          element={
-            <StatisticsPage
-              dictionary={dictionary}
-              history={history}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </Layout>
   )

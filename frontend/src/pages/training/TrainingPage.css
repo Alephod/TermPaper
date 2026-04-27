@@ -1,0 +1,464 @@
+.training-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.training__hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 80px 40px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.training__title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0 0 24px;
+}
+
+.training__subtitle {
+  font-size: 1.25rem;
+  margin: 0 0 40px;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.training__stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+
+.training__stat {
+  text-align: center;
+}
+
+.training__stat-value {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.training__stat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.training__difficulty-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  border-radius: var(--radius-md);
+  margin-bottom: 40px;
+  backdrop-filter: blur(10px);
+}
+
+.training__difficulty-info h3 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+.training__difficulty-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.difficulty-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.difficulty-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.difficulty-item.easy .difficulty-dot {
+  background: #10b981;
+}
+
+.difficulty-item.medium .difficulty-dot {
+  background: #f59e0b;
+}
+
+.difficulty-item.hard .difficulty-dot {
+  background: #ef4444;
+}
+
+.training__primary-button {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 16px 32px;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-medium);
+}
+
+.training__primary-button:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.training__summary {
+  background: var(--bg-card);
+  padding: 60px 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-medium);
+  text-align: center;
+}
+
+.training__summary-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.training__summary-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.training__summary-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 32px;
+  color: var(--text-main);
+}
+
+.training__summary-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 32px;
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.summary-stat__value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.summary-stat__label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.training__summary-message {
+  background: var(--accent-soft);
+  padding: 24px;
+  border-radius: var(--radius-md);
+  margin-bottom: 40px;
+}
+
+.training__summary-message p {
+  margin: 0;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.training__summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.training__secondary-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.training__secondary-button {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 2px solid var(--border-subtle);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.training__secondary-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.training__question {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.training__question-header {
+  margin-bottom: 20px;
+}
+
+.training__progress {
+  text-align: center;
+}
+
+.training__progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.training__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
+.training__progress-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.training__question-card {
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-medium);
+}
+
+.training__question-content {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.training__term {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 16px;
+}
+
+.training__question-hint {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.training__prompt-image {
+  margin-bottom: 24px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.training__prompt-img {
+  width: 300px;
+  height: 300px;
+  display: block;
+  object-fit: cover;
+}
+
+.training__options--image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.training__option-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.training__option--image {
+  padding: 0 !important;
+}
+
+.training__options {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.training__option {
+  background: var(--bg-card);
+  border: 2px solid var(--border-subtle);
+  padding: 20px;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.training__option:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-soft);
+}
+
+.training__option--selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.training__option--correct {
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.training__option--wrong {
+  border-color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.training__option:disabled {
+  cursor: not-allowed;
+}
+
+.training__option-text {
+  flex: 1;
+}
+
+.training__option-icon {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-left: 16px;
+}
+
+.training__feedback {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.training__feedback-correct {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 10px;
+}
+
+.training__feedback-wrong {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 2px solid var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-radius: var(--radius-md);
+  padding: 10px 10px;
+}
+
+.training__feedback-icon {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.training__next-button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.training__next-button:hover {
+  background: #2563eb;
+  box-shadow: var(--shadow-medium);
+}
+
+@media (max-width: 768px) {
+  .training__hero {
+    padding: 40px 20px;
+  }
+
+  .training__title {
+    font-size: 2rem;
+  }
+
+  .training__stats {
+    gap: 24px;
+  }
+
+  .training__stat-value {
+    font-size: 2rem;
+  }
+
+  .training__summary {
+    padding: 40px 20px;
+  }
+
+  .training__summary-title {
+    font-size: 2rem;
+  }
+
+  .training__summary-stats {
+    gap: 24px;
+  }
+
+  .training__secondary-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .training__question-card {
+    padding: 24px;
+  }
+
+  .training__term {
+    font-size: 2rem;
+  }
+
+  .training__options--image-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .training__prompt-image {
+    max-width: 100%;
+    width: 200px;
+  }
+
+  .training__prompt-img {
+    width: 200px;
+    height: 200px;
+  }
+}
