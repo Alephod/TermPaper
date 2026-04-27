@@ -1,32 +1,38 @@
-import React, { useState } from 'react'
-import type {
-  DictionaryEntry,
-  DictionaryDeck,
-  Difficulty
-} from '../../types'
-import { dataService } from '../../services/dataService'
-import { ApiError } from '../../services/api'
+import type React from 'react'
+import { useState } from 'react'
+import { DeckList } from '../../components/deck-list/DeckList'
 import { Button } from '../../components/ui/button/Button'
 import { Input } from '../../components/ui/input/Input'
 import { Select } from '../../components/ui/select/Select'
-import { DeckList } from '../../components/deck-list/DeckList'
+import { ApiError } from '../../services/api'
+import { dataService } from '../../services/dataService'
+import type { DictionaryDeck, DictionaryEntry, Difficulty } from '../../types'
+
 import './DecksPage.css'
 
 type DecksPageProps = {
-  dictionary: DictionaryEntry[]
-  decks: DictionaryDeck[]
-  onUpdateDecks: (decks: DictionaryDeck[]) => void
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void
-  onStartTraining: (deckId?: string) => void
-}
+  dictionary: DictionaryEntry[];
+
+  decks: DictionaryDeck[];
+
+  onUpdateDecks: (decks: DictionaryDeck[]) => void;
+
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
+
+  onStartTraining: (deckId?: string) => void;
+};
 
 type NewWordFormState = {
-  term: string
-  translation: string
-  example: string
-  exampleTranslation: string
-  difficulty: Difficulty
-}
+  term: string;
+
+  translation: string;
+
+  example: string;
+
+  exampleTranslation: string;
+
+  difficulty: Difficulty;
+};
 
 const buildEmptyWordForm = (): NewWordFormState => ({
   term: '',
@@ -47,14 +53,20 @@ export const DecksPage: React.FC<DecksPageProps> = ({
   const [newDeckName, setNewDeckName] = useState<string>('')
   const [editingDeckId, setEditingDeckId] = useState<string | null>(null)
   const [editingDeckName, setEditingDeckName] = useState<string>('')
-  const [wordForms, setWordForms] = useState<{ [deckId: string]: NewWordFormState }>({})
+
+  const [wordForms, setWordForms] = useState<{
+    [deckId: string]: NewWordFormState;
+  }>({})
+
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
   const getWordsForDeck = (deckId: string): DictionaryEntry[] => {
-    const deck = decks.find(d => d.id === deckId)
+    const deck = decks.find((d) => d.id === deckId)
+
     if (!deck) return []
-    return dictionary.filter(word => deck.wordIds.includes(word.id))
+
+    return dictionary.filter((word) => deck.wordIds.includes(word.id))
   }
 
   const handleCreateDeck = async (): Promise<void> => {
@@ -98,7 +110,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
         name: trimmedName
       })
 
-      const newDecks = decks.map(deck =>
+      const newDecks = decks.map((deck) =>
         deck.id === deckId ? updated : deck
       )
       onUpdateDecks(newDecks)
@@ -122,7 +134,9 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setError(null)
 
       await dataService.deleteDeck(deckId)
-      const updated = decks.filter(deck => deck.id !== deckId)
+
+      const updated = decks.filter((deck) => deck.id !== deckId)
+
       onUpdateDecks(updated)
 
       if (expandedDeckId === deckId) {
@@ -158,7 +172,8 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       })
 
       // Обновляем словарь только если слова ещё нет
-      if (!dictionary.some(w => w.id === result.word.id)) {
+
+      if (!dictionary.some((w) => w.id === result.word.id)) {
         onUpdateDictionary([...dictionary, result.word])
       }
 
@@ -167,12 +182,14 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       onUpdateDecks(refreshedDecks)
 
       // Очищаем форму
-      setWordForms(prev => ({
+
+      setWordForms((prev) => ({
         ...prev,
         [deckId]: buildEmptyWordForm()
       }))
     } catch (err) {
       console.error('Failed to add word to deck:', err)
+
       if (err instanceof ApiError) {
         setError(`Failed to add word: ${err.message}`)
       } else {
@@ -183,7 +200,10 @@ export const DecksPage: React.FC<DecksPageProps> = ({
     }
   }
 
-  const handleRemoveWordFromDeck = async (deckId: string, wordId: string): Promise<void> => {
+  const handleRemoveWordFromDeck = async (
+    deckId: string,
+    wordId: string
+  ): Promise<void> => {
     try {
       setLoading(true)
       setError(null)
@@ -205,7 +225,10 @@ export const DecksPage: React.FC<DecksPageProps> = ({
     }
   }
 
-  const handleAddExistingWordToDeck = async (deckId: string, wordId: string): Promise<void> => {
+  const handleAddExistingWordToDeck = async (
+    deckId: string,
+    wordId: string
+  ): Promise<void> => {
     try {
       setLoading(true)
       setError(null)
@@ -228,16 +251,23 @@ export const DecksPage: React.FC<DecksPageProps> = ({
   }
 
   const getAvailableWordsForDeck = (deckId: string): DictionaryEntry[] => {
-    const deck = decks.find(d => d.id === deckId)
+    const deck = decks.find((d) => d.id === deckId)
+
     if (!deck) return []
-    return dictionary.filter(word => !deck.wordIds.includes(word.id))
+
+    return dictionary.filter((word) => !deck.wordIds.includes(word.id))
   }
 
-  const handleWordFormChange = (deckId: string, field: keyof NewWordFormState, value: string): void => {
-    setWordForms(prev => ({
+  const handleWordFormChange = (
+    deckId: string,
+    field: keyof NewWordFormState,
+    value: string
+  ): void => {
+    setWordForms((prev) => ({
       ...prev,
       [deckId]: {
-        ...prev[deckId] || buildEmptyWordForm(),
+        ...(prev[deckId] || buildEmptyWordForm()),
+
         [field]: value
       }
     }))
@@ -286,7 +316,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
           <div className='decks__create-form'>
             <Input
               value={newDeckName}
-              onChange={e => setNewDeckName(e.target.value)}
+              onChange={(e) => setNewDeckName(e.target.value)}
               placeholder='Название колоды...'
               disabled={loading}
               fullWidth
@@ -314,7 +344,9 @@ export const DecksPage: React.FC<DecksPageProps> = ({
           onDeleteDeck={handleDeleteDeck}
           onRenameDeck={handleRenameDeck}
           expandedDeckId={expandedDeckId}
-          onToggleExpand={(deckId) => setExpandedDeckId(expandedDeckId === deckId ? null : deckId)}
+          onToggleExpand={(deckId) =>
+            setExpandedDeckId(expandedDeckId === deckId ? null : deckId)
+          }
         />
       </section>
     </div>

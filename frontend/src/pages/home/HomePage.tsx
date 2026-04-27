@@ -1,16 +1,26 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
+
 import { useNavigate } from 'react-router-dom'
-import type { DictionaryEntry, TrainingSession, DictionaryDeck } from '../../types'
 import { Button } from '../../components/ui/button/Button'
 import { WordOfTheDayWidget } from '../../components/word-of-the-day/WordOfTheDayWidget'
+import type {
+  DictionaryDeck,
+  DictionaryEntry,
+  TrainingSession
+} from '../../types'
+
 import './HomePage.css'
 
 type HomePageProps = {
-  dictionary: DictionaryEntry[]
-  decks: DictionaryDeck[]
-  history: TrainingSession[]
-  onStartTraining: () => void
-}
+  dictionary: DictionaryEntry[];
+
+  decks: DictionaryDeck[];
+
+  history: TrainingSession[];
+
+  onStartTraining: () => void;
+};
 
 const getAverageAccuracy = (history: TrainingSession[]): number => {
   if (history.length === 0) return 0
@@ -20,13 +30,19 @@ const getAverageAccuracy = (history: TrainingSession[]): number => {
 
 const getLearnedWordsCount = (history: TrainingSession[]): number => {
   const learnedIds = new Set<string>()
-  history.forEach(session => {
-    session.correctWordIds.forEach(id => learnedIds.add(id))
+
+  history.forEach((session) => {
+    session.correctWordIds.forEach((id) => {
+      learnedIds.add(id)
+    })
   })
   return learnedIds.size
 }
 
-const getRecentSessions = (history: TrainingSession[], limit: number = 3): TrainingSession[] => {
+const getRecentSessions = (
+  history: TrainingSession[],
+  limit: number = 3
+): TrainingSession[] => {
   return history.slice(0, limit)
 }
 
@@ -44,16 +60,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   dictionary,
   decks,
   history,
+
   onStartTraining
 }) => {
   const navigate = useNavigate()
-  const [selectedDeck, setSelectedDeck] = useState<string>('all')
+
   const [loading, setLoading] = useState<boolean>(false)
 
   const learnedCount = getLearnedWordsCount(history)
   const averageAccuracy = getAverageAccuracy(history)
   const recentSessions = getRecentSessions(history)
-
 
   const handleStartTraining = async () => {
     setLoading(true)
@@ -101,45 +117,44 @@ export const HomePage: React.FC<HomePageProps> = ({
       <section className='home__hero'>
         <div className='home__hero-content'>
           <div className='home__hero-text'>
-            <h1 className='home__title'>
-              Тренажёр иностранных слов
-            </h1>
+            <h1 className='home__title'>Тренажёр иностранных слов</h1>
+
             <p className='home__subtitle'>
               Эффективно изучайте слова с помощью интервального повторения.
               Создавайте колоды, тренируйтесь и отслеживайте свой прогресс.
             </p>
           </div>
-
-
-          <div className='home__hero-actions'>
-            <Button
-              variant='primary'
-              size='lg'
-              onClick={handleStartTraining}
-              disabled={loading || dictionary.length === 0}
-              loading={loading}
-            >
-              Начать тренировку
-            </Button>
-
-            <Button
-              variant='secondary'
-              size='lg'
-              onClick={handleQuickAddWord}
-            >
-              ➕ Добавить слово
-            </Button>
-          </div>
         </div>
+
         <WordOfTheDayWidget dictionary={dictionary} />
+
+        <div className='home__hero-actions'>
+          <Button
+            variant='primary'
+            size='lg'
+            onClick={handleStartTraining}
+            disabled={loading || dictionary.length === 0}
+            loading={loading}
+          >
+            Начать тренировку
+          </Button>
+
+          <Button variant='secondary' size='lg' onClick={handleQuickAddWord}>
+            ➕ Добавить слово
+          </Button>
+        </div>
       </section>
 
       {/* Quick Stats */}
       <section className='home__stats'>
         <h2 className='home__section-title'>Ваша статистика</h2>
         <div className='home__stats-grid'>
-          {stats.map((stat, index) => (
-            <div key={index} className='stat-card' style={{ '--accent-color': stat.color } as React.CSSProperties}>
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className='stat-card'
+              style={{ '--accent-color': stat.color } as React.CSSProperties}
+            >
               <div className='stat-card__icon'>{stat.icon}</div>
               <div className='stat-card__content'>
                 <div className='stat-card__value'>{stat.value}</div>
@@ -150,50 +165,12 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* Quick Actions */}
-      <section className='home__quick-actions'>
-        <h2 className='home__section-title'>Быстрые действия</h2>
-        <div className='home__actions-grid'>
-          <button
-            className='action-card'
-            onClick={() => navigate('/dictionary')}
-          >
-            <div className='action-card__icon'>📝</div>
-            <div className='action-card__content'>
-              <h3>Словарь</h3>
-              <p>Добавить и редактировать слова</p>
-            </div>
-          </button>
-
-          <button
-            className='action-card'
-            onClick={() => navigate('/decks')}
-          >
-            <div className='action-card__icon'>🎴</div>
-            <div className='action-card__content'>
-              <h3>Колоды</h3>
-              <p>Управлять наборами слов</p>
-            </div>
-          </button>
-
-          <button
-            className='action-card'
-            onClick={() => navigate('/statistics')}
-          >
-            <div className='action-card__icon'>📊</div>
-            <div className='action-card__content'>
-              <h3>Статистика</h3>
-              <p>Детальный прогресс</p>
-            </div>
-          </button>
-        </div>
-      </section>
-
-
       {/* Recent Activity */}
       <section className='home__recent'>
         <div className='home__section-title'>
-          <h2 style={{ fontSize: '2rem', margin: '0' }}>Последние тренировки</h2>
+          <h2 style={{ fontSize: '2rem', margin: '0' }}>
+            Последние тренировки
+          </h2>
         </div>
 
         {recentSessions.length > 0 ? (
@@ -201,14 +178,22 @@ export const HomePage: React.FC<HomePageProps> = ({
             {recentSessions.map((session, index) => (
               <div key={session.id || index} className='session-card'>
                 <div className='session-card__header'>
-                  <div className='session-card__date'>{formatDate(session.date)}</div>
-                  <div className={`session-card__accuracy session-card__accuracy--${session.accuracy >= 70 ? 'good' : session.accuracy >= 40 ? 'medium' : 'low'}`}>
+                  <div className='session-card__date'>
+                    {formatDate(session.date)}
+                  </div>
+
+                  <div
+                    className={`session-card__accuracy session-card__accuracy--${session.accuracy >= 70 ? 'good' : session.accuracy >= 40 ? 'medium' : 'low'}`}
+                  >
                     {session.accuracy}%
                   </div>
                 </div>
                 <div className='session-card__stats'>
                   <span>✅ {session.correctAnswers} правильных</span>
-                  <span>❌ {session.totalQuestions - session.correctAnswers} ошибок</span>
+
+                  <span>
+                    ❌ {session.totalQuestions - session.correctAnswers} ошибок
+                  </span>
                 </div>
               </div>
             ))}
@@ -229,9 +214,6 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         )}
       </section>
-
-
-
     </div>
   )
 }

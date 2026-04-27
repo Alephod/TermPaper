@@ -25,10 +25,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
 
   return (
     <div className={wrapperClass}>
-      {label && <label className="input__label">{label}</label>}
+      {label && <label className='input__label'>{label}</label>}
       <input ref={ref} className={inputClass} {...props} />
-      {error && <span className="input__error">{error}</span>}
-      {helperText && !error && <span className="input__helper">{helperText}</span>}
+      {error && <span className='input__error'>{error}</span>}
+      {helperText && !error && <span className='input__helper'>{helperText}</span>}
     </div>
   )
 })

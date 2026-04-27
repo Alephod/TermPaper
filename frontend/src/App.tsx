@@ -1,17 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { dataService } from './services/dataService'
-import { ApiError } from './services/api'
-import type {
-  DictionaryEntry,
-  TrainingSession,
-  DictionaryDeck
-} from './types'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
+import { DecksPage } from './pages/decks/DecksPage'
+import { DictionaryPage } from './pages/dictionary/DictionaryPage'
 import { HomePage } from './pages/home/HomePage'
 import { TrainingPage } from './pages/training/TrainingPage'
-import { DictionaryPage } from './pages/dictionary/DictionaryPage'
-import { DecksPage } from './pages/decks/DecksPage'
+import { ApiError } from './services/api'
+import { dataService } from './services/dataService'
+import type { DictionaryDeck, DictionaryEntry, TrainingSession } from './types'
 
 export const App: React.FC = () => {
   const navigate = useNavigate()
@@ -27,7 +24,11 @@ export const App: React.FC = () => {
         setLoading(true)
         setError(null)
 
-        const { words, decks: loadedDecks, sessions } = await dataService.initializeData()
+        const {
+          words,
+          decks: loadedDecks,
+          sessions
+        } = await dataService.initializeData()
 
         setDictionary(words)
         setDecks(loadedDecks)
@@ -65,10 +66,10 @@ export const App: React.FC = () => {
     try {
       setDictionary(entries)
 
-      const cleanedDecks = decks.map(deck => ({
+      const cleanedDecks = decks.map((deck) => ({
         ...deck,
-        wordIds: deck.wordIds.filter(wordId =>
-          entries.some(entry => entry.id === wordId)
+        wordIds: deck.wordIds.filter((wordId) =>
+          entries.some((entry) => entry.id === wordId)
         )
       }))
       setDecks(cleanedDecks)
@@ -94,7 +95,7 @@ export const App: React.FC = () => {
   ): Promise<void> => {
     try {
       const createdSession = await dataService.createTrainingSession(session)
-      setHistory(prev => [createdSession, ...prev])
+      setHistory((prev) => [createdSession, ...prev])
     } catch (err) {
       console.error('Failed to save training session:', err)
       setError('Не удалось сохранить сессию обучения')
@@ -122,7 +123,7 @@ export const App: React.FC = () => {
     <Layout isDictionaryError={!!error} isHistoryError={!!error}>
       <Routes>
         <Route
-          path="/"
+          path='/'
           element={
             <HomePage
               dictionary={dictionary}
@@ -133,19 +134,18 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="/training"
+          path='/training'
           element={
             <TrainingPage
               dictionary={dictionary}
               decks={decks}
               onFinishSession={handleFinishSession}
               onGoToDictionary={() => navigate('/dictionary')}
-              onGoToStatistics={() => navigate('/statistics')}
             />
           }
         />
         <Route
-          path="/dictionary"
+          path='/dictionary'
           element={
             <DictionaryPage
               dictionary={dictionary}
@@ -157,7 +157,7 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="/decks"
+          path='/decks'
           element={
             <DecksPage
               dictionary={dictionary}
@@ -168,7 +168,7 @@ export const App: React.FC = () => {
             />
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </Layout>
   )

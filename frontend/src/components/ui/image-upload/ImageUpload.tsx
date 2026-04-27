@@ -1,13 +1,14 @@
-import React, { useRef } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import './ImageUpload.css'
 
 type ImageUploadProps = {
-  label?: string
-  previewUrl: string | null
-  onImageSelect: (file: File) => void
-  onImageRemove: () => void
-  disabled?: boolean
-}
+  label?: string;
+  previewUrl: string | null;
+  onImageSelect: (file: File) => void;
+  onImageRemove: () => void;
+  disabled?: boolean;
+};
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   label = 'Изображение',
@@ -18,7 +19,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
     const file = event.target.files?.[0]
     if (!file) return
     onImageSelect(file)
@@ -34,7 +37,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   return (
     <div className='image-upload'>
       <label className='image-upload__label'>{label}</label>
-      <div className={`image-upload__area image-upload__area--large ${previewUrl ? 'image-upload__area--has-image' : ''}`}>
+      <div
+        className={`image-upload__area image-upload__area--large ${previewUrl ? 'image-upload__area--has-image' : ''}`}
+      >
         {previewUrl ? (
           <div className='image-upload__preview'>
             <img src={previewUrl} alt='Preview' />

@@ -37,12 +37,20 @@ export type DictionaryDeck = {
 
 // ==== Тренировка ====
 
+export type QuestionType =
+	| 'term-to-translation'
+	| 'translation-to-term'
+	| 'image-to-term'
+	| 'term-to-image'
+
 export type TrainingQuestion = {
   id: string
   wordId: string
-  term: string
+  type: QuestionType
+  prompt: string
+  promptImageUrl?: string | null
   correctOptionId: string
-  options: { id: string; text: string }[]
+  options: { id: string; text: string; imageUrl?: string | null }[]
 }
 
 export type TrainingSession = {

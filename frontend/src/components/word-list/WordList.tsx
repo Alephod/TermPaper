@@ -1,6 +1,5 @@
-import React from 'react'
+import type React from 'react'
 import type { DictionaryEntry } from '../../types'
-import { Button } from '../ui/button/Button'
 import './WordList.css'
 
 export type WordListProps = {
@@ -10,6 +9,12 @@ export type WordListProps = {
   onDelete?: (id: string) => void
   emptyMessage?: string
   emptyDescription?: string
+}
+
+const difficultyLabels: Record<string, string> = {
+  easy: 'Легкая',
+  medium: 'Средняя',
+  hard: 'Сложная'
 }
 
 export function WordList({
@@ -32,60 +37,63 @@ export function WordList({
 
   return (
     <div className='word-list'>
-      {words.map(entry => (
+      {words.map((entry) => (
         <div key={entry.id} className='word-entry'>
-          <div className='word-entry__main'>
+          <div className='word-entry__header'>
             {entry.imageUrl && (
               <div className='word-entry__image'>
-                <img src={import.meta.env.VITE_API_URL + entry.imageUrl} alt={entry.term} />
+                <img
+                  src={entry.imageUrl}
+                  alt={entry.term}
+                />
               </div>
             )}
-            <div className='word-entry__content'>
+            <div className='word-entry__meta'>
               <div className='word-entry__term'>{entry.term}</div>
-              <div className='word-entry__translation'>{entry.translation}</div>
-              <div className={`word-entry__difficulty word-entry__difficulty--${entry.difficulty}`}>
-                {entry.difficulty}
+              <div
+                className={`word-entry__difficulty word-entry__difficulty--${entry.difficulty}`}
+              >
+                {difficultyLabels[entry.difficulty] || entry.difficulty}
               </div>
+              <div className='word-entry__translation'>{entry.translation}</div>
             </div>
+            {(onEdit || onDelete) && (
+              <div className='word-entry__actions'>
+                {onEdit && (
+                  <button
+                    type='button'
+                    className='word-entry__action-btn word-entry__action-btn--edit'
+                    onClick={() => onEdit(entry)}
+                    disabled={loading}
+                    title='Редактировать'
+                  >
+                    ✏️
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type='button'
+                    className='word-entry__action-btn word-entry__action-btn--delete'
+                    onClick={() => onDelete(entry.id)}
+                    disabled={loading}
+                    title='Удалить'
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {(entry.example || entry.exampleTranslation) && (
             <div className='word-entry__examples'>
               {entry.example && (
-                <div className='word-entry__example'>
-                  <span className='word-entry__example-label'>Пример:</span>
-                  {entry.example}
-                </div>
+                <div className='word-entry__example'>{entry.example}</div>
               )}
               {entry.exampleTranslation && (
                 <div className='word-entry__example-translation'>
                   {entry.exampleTranslation}
                 </div>
-              )}
-            </div>
-          )}
-
-          {(onEdit || onDelete) && (
-            <div className='word-entry__actions'>
-              {onEdit && (
-                <Button
-                  variant='secondary'
-                  size='sm'
-                  onClick={() => onEdit(entry)}
-                  disabled={loading}
-                >
-                  ✏️ Редактировать
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  variant='danger'
-                  size='sm'
-                  onClick={() => onDelete(entry.id)}
-                  disabled={loading}
-                >
-                  🗑️ Удалить
-                </Button>
               )}
             </div>
           )}

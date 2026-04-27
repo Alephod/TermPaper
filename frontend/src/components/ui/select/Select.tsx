@@ -31,7 +31,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>((
 
   return (
     <div className={wrapperClass}>
-      {label && <label className="select__label">{label}</label>}
+      {label && <label className='select__label'>{label}</label>}
       <select ref={ref} className={selectClass} {...props}>
         {options.map(opt => (
           <option key={opt.value} value={opt.value}>
@@ -39,8 +39,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>((
           </option>
         ))}
       </select>
-      {error && <span className="select__error">{error}</span>}
-      {helperText && !error && <span className="select__helper">{helperText}</span>}
+      {error && <span className='select__error'>{error}</span>}
+      {helperText && !error && <span className='select__helper'>{helperText}</span>}
     </div>
   )
 })

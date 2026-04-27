@@ -1,37 +1,50 @@
-import React, { useState, useMemo } from 'react'
+import type React from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '../../components/ui/button/Button'
+import { ImageUpload } from '../../components/ui/image-upload/ImageUpload'
+import { Input } from '../../components/ui/input/Input'
+import { Select } from '../../components/ui/select/Select'
+import { WordList } from '../../components/word-list/WordList'
+import { ApiError, apiClient, extractRelativeImagePath } from '../../services/api'
+import { dataService } from '../../services/dataService'
 import type {
-  DictionaryEntry,
   DictionaryDeck,
+  DictionaryEntry,
   Difficulty,
   FilterDifficulty
 } from '../../types'
-import { dataService } from '../../services/dataService'
-import { apiClient, ApiError } from '../../services/api'
-import { Button } from '../../components/ui/button/Button'
-import { Input } from '../../components/ui/input/Input'
-import { Select } from '../../components/ui/select/Select'
-import { ImageUpload } from '../../components/ui/image-upload/ImageUpload'
-import { WordList } from '../../components/word-list/WordList'
+
 import './DictionaryPage.css'
 
 type DictionaryPageProps = {
-  dictionary: DictionaryEntry[]
-  decks: DictionaryDeck[]
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void
-  onUpdateDecks: (decks: DictionaryDeck[]) => void
-  hasError: boolean
-}
+  dictionary: DictionaryEntry[];
+
+  decks: DictionaryDeck[];
+
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
+
+  onUpdateDecks: (decks: DictionaryDeck[]) => void;
+
+  hasError: boolean;
+};
 
 type FormState = {
-  id: string | null
-  term: string
-  translation: string
-  example: string
-  exampleTranslation: string
-  difficulty: Difficulty
-  imageUrl: string | null
-  imageFile: File | null
-}
+  id: string | null;
+
+  term: string;
+
+  translation: string;
+
+  example: string;
+
+  exampleTranslation: string;
+
+  difficulty: Difficulty;
+
+  imageUrl: string | null;
+
+  imageFile: File | null;
+};
 
 const buildEmptyFormState = (): FormState => ({
   id: null,
@@ -41,6 +54,7 @@ const buildEmptyFormState = (): FormState => ({
   exampleTranslation: '',
   difficulty: 'easy',
   imageUrl: null,
+
   imageFile: null
 })
 
@@ -49,6 +63,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   decks,
   onUpdateDictionary,
   onUpdateDecks,
+
   hasError
 }) => {
   const [filter, setFilter] = useState<FilterDifficulty>('all')
@@ -61,7 +76,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
     if (filter === 'all') {
       return dictionary
     }
-    return dictionary.filter(entry => entry.difficulty === filter)
+
+    return dictionary.filter((entry) => entry.difficulty === filter)
   }, [dictionary, filter])
 
   const handleChangeFilter = (value: FilterDifficulty): void => {
@@ -83,7 +99,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   }
 
   const handleImageSelect = (file: File): void => {
-    setFormState(prev => ({ ...prev, imageFile: file }))
+    setFormState((prev) => ({ ...prev, imageFile: file }))
 
     const reader = new FileReader()
     reader.onloadend = () => {
@@ -93,7 +109,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
   }
 
   const handleRemoveImage = (): void => {
-    setFormState(prev => ({ ...prev, imageFile: null, imageUrl: null }))
+    setFormState((prev) => ({ ...prev, imageFile: null, imageUrl: null }))
+
     setImagePreview(null)
   }
 
@@ -102,7 +119,9 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       setLoading(true)
       setError(null)
       await dataService.deleteWord(id)
-      const updated = dictionary.filter(entry => entry.id !== id)
+
+      const updated = dictionary.filter((entry) => entry.id !== id)
+
       onUpdateDictionary(updated)
     } catch (err) {
       console.error('Failed to delete word:', err)
@@ -123,7 +142,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       await dataService.clearWords()
       onUpdateDictionary([])
       onUpdateDecks(
-        decks.map(deck => ({
+        decks.map((deck) => ({
           ...deck,
           wordIds: []
         }))
@@ -140,7 +159,9 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
     }
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     event.preventDefault()
 
     if (!formState.term.trim() || !formState.translation.trim()) {
@@ -151,7 +172,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       setLoading(true)
       setError(null)
 
-      let imagePath = formState.imageUrl
+      let imagePath = extractRelativeImagePath(formState.imageUrl)
 
       if (formState.imageFile) {
         const uploadResult = await apiClient.uploadImage(formState.imageFile)
@@ -164,12 +185,14 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         example: formState.example.trim(),
         exampleTranslation: formState.exampleTranslation.trim(),
         difficulty: formState.difficulty,
+
         imagePath: imagePath
       }
 
       if (formState.id) {
         const updated = await dataService.updateWord(formState.id, wordData)
-        const newDictionary = dictionary.map(entry =>
+
+        const newDictionary = dictionary.map((entry) =>
           entry.id === formState.id ? updated : entry
         )
         onUpdateDictionary(newDictionary)
@@ -177,7 +200,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         const newEntry = await dataService.createWord(wordData)
 
         // Проверяем, что слово еще не добавлено в UI
-        if (!dictionary.some(entry => entry.id === newEntry.id)) {
+
+        if (!dictionary.some((entry) => entry.id === newEntry.id)) {
           onUpdateDictionary([...dictionary, newEntry])
         }
       }
@@ -202,24 +226,37 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         <div className='dictionary__hero-content'>
           <h1 className='dictionary__title'>📝 Словарь</h1>
           <p className='dictionary__subtitle'>
-            Управляйте вашим словарем: добавляйте, редактируйте и удаляйте слова для тренировок
+            Управляйте вашим словарем: добавляйте, редактируйте и удаляйте слова
+            для тренировок
           </p>
 
           <div className='dictionary__stats'>
             <div className='dictionary__stat'>
-              <span className='dictionary__stat-value'>{dictionary.length}</span>
+              <span className='dictionary__stat-value'>
+                {dictionary.length}
+              </span>
+
               <span className='dictionary__stat-label'>всего слов</span>
             </div>
             <div className='dictionary__stat'>
-              <span className='dictionary__stat-value'>{dictionary.filter(w => w.difficulty === 'easy').length}</span>
+              <span className='dictionary__stat-value'>
+                {dictionary.filter((w) => w.difficulty === 'easy').length}
+              </span>
+
               <span className='dictionary__stat-label'>легких</span>
             </div>
             <div className='dictionary__stat'>
-              <span className='dictionary__stat-value'>{dictionary.filter(w => w.difficulty === 'medium').length}</span>
+              <span className='dictionary__stat-value'>
+                {dictionary.filter((w) => w.difficulty === 'medium').length}
+              </span>
+
               <span className='dictionary__stat-label'>средних</span>
             </div>
             <div className='dictionary__stat'>
-              <span className='dictionary__stat-value'>{dictionary.filter(w => w.difficulty === 'hard').length}</span>
+              <span className='dictionary__stat-value'>
+                {dictionary.filter((w) => w.difficulty === 'hard').length}
+              </span>
+
               <span className='dictionary__stat-label'>сложных</span>
             </div>
           </div>
@@ -232,7 +269,11 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
             <span className='dictionary__error-icon'>⚠️</span>
             <div className='dictionary__error-text'>
               <h3>Ошибка загрузки данных</h3>
-              <p>Не удалось корректно прочитать словарь. Вы можете очистить его и начать заново.</p>
+
+              <p>
+                Не удалось корректно прочитать словарь. Вы можете очистить его и
+                начать заново.
+              </p>
             </div>
             <Button
               variant='danger'
@@ -249,7 +290,9 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       <section className='dictionary__form-section'>
         <div className='dictionary__section-header'>
           <h2 className='dictionary__section-title'>
-            {formState.id ? '✏️ Редактирование слова' : '➕ Добавить новое слово'}
+            {formState.id
+              ? '✏️ Редактирование слова'
+              : '➕ Добавить новое слово'}
           </h2>
         </div>
 
@@ -260,9 +303,10 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Input
                   label='Слово *'
                   value={formState.term}
-                  onChange={event =>
-                    setFormState(previous => ({
+                  onChange={(event) =>
+                    setFormState((previous) => ({
                       ...previous,
+
                       term: event.target.value
                     }))
                   }
@@ -275,9 +319,10 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Input
                   label='Перевод *'
                   value={formState.translation}
-                  onChange={event =>
-                    setFormState(previous => ({
+                  onChange={(event) =>
+                    setFormState((previous) => ({
                       ...previous,
+
                       translation: event.target.value
                     }))
                   }
@@ -290,9 +335,10 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Input
                   label='Пример'
                   value={formState.example}
-                  onChange={event =>
-                    setFormState(previous => ({
+                  onChange={(event) =>
+                    setFormState((previous) => ({
                       ...previous,
+
                       example: event.target.value
                     }))
                   }
@@ -304,9 +350,10 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Input
                   label='Перевод примера'
                   value={formState.exampleTranslation}
-                  onChange={event =>
-                    setFormState(previous => ({
+                  onChange={(event) =>
+                    setFormState((previous) => ({
                       ...previous,
+
                       exampleTranslation: event.target.value
                     }))
                   }
@@ -318,16 +365,19 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Select
                   label='Сложность'
                   value={formState.difficulty}
-                  onChange={event =>
-                    setFormState(previous => ({
+                  onChange={(event) =>
+                    setFormState((previous) => ({
                       ...previous,
+
                       difficulty: event.target.value as Difficulty
                     }))
                   }
                   disabled={loading}
                   options={[
                     { value: 'easy', label: 'Легкая' },
+
                     { value: 'medium', label: 'Средняя' },
+
                     { value: 'hard', label: 'Сложная' }
                   ]}
                   fullWidth
@@ -362,7 +412,11 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                 <Button
                   type='submit'
                   variant='primary'
-                  disabled={loading || !formState.term.trim() || !formState.translation.trim()}
+                  disabled={
+                    loading ||
+                    !formState.term.trim() ||
+                    !formState.translation.trim()
+                  }
                   loading={loading}
                 >
                   {formState.id ? 'Обновить' : 'Добавить'}
@@ -377,10 +431,13 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         <div className='dictionary__section-header'>
           <h2 className='dictionary__section-title'>📚 Все слова</h2>
           <div className='dictionary__filter'>
-            <label className='dictionary__filter-label'>Фильтр по сложности:</label>
+            <label className='dictionary__filter-label'>
+              Фильтр по сложности:
+            </label>
+
             <Select
               value={filter}
-              onChange={event =>
+              onChange={(event) =>
                 handleChangeFilter(event.target.value as FilterDifficulty)
               }
               options={[
@@ -405,10 +462,15 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          emptyMessage={dictionary.length === 0 ? 'Словарь пуст' : 'Нет слов по этому фильтру'}
-          emptyDescription={dictionary.length === 0
-            ? 'Добавьте первое слово, чтобы начать тренировки'
-            : 'Попробуйте изменить фильтр или добавьте новые слова'
+          emptyMessage={
+            dictionary.length === 0
+              ? 'Словарь пуст'
+              : 'Нет слов по этому фильтру'
+          }
+          emptyDescription={
+            dictionary.length === 0
+              ? 'Добавьте первое слово, чтобы начать тренировки'
+              : 'Попробуйте изменить фильтр или добавьте новые слова'
           }
         />
       </section>

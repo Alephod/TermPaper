@@ -20,9 +20,11 @@ export default tseslint.config(
     rules: {
       semi: ['error', 'never'],
       indent: ['error', 2],
+      quotes: ['error', 'single'],
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'eol-last': ['error', 'always'],
-      '@typescript-eslint/no-explicit-any': 'error'
+      'jsx-quotes': ['error', 'prefer-single'],
+      'comma-dangle': ['error', 'never']
     }
   }
 )
