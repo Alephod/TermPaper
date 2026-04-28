@@ -27,7 +27,6 @@ export type DictionaryEntry = {
   exampleTranslation: string
   imageUrl?: string | null
   imagePath?: string | null
-  // SM-2 поля
   sm2EasinessFactor?: number | null
   sm2Interval?: number | null
   sm2Repetitions?: number | null
@@ -67,33 +66,4 @@ export type TrainingSession = {
   accuracy: number
   correctWordIds: string[]
   wrongWordIds: string[]
-}
-
-// ==== SM-2 Review ====
-
-export type ReviewQuality = 0 | 1 | 2 | 3 | 4 | 5
-
-export type WordsForReviewRequest = {
-  wordIds?: string[]
-  limit?: number
-}
-
-export type ReviewRequest = {
-	wordId: string
-	quality: ReviewQuality
-}
-
-export type ReviewResult = {
-	word: DictionaryEntry
-	previous: {
-		easinessFactor: number
-		interval: number
-		repetitions: number
-	}
-	new: {
-		easinessFactor: number
-		interval: number
-		repetitions: number
-	}
-	quality: ReviewQuality
 }

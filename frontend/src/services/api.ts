@@ -3,11 +3,8 @@ import type {
   DictionaryDeck,
   DictionaryEntry,
   Difficulty,
-  ReviewRequest,
-  ReviewResult,
   TrainingSession,
-  Word,
-  WordsForReviewRequest
+  Word
 } from '../types'
 
 export const API_BASE_URL =
@@ -213,30 +210,46 @@ class ApiClient {
 
   // Training Sessions API
   async getTrainingSessions(): Promise<TrainingSession[]> {
-    return this.request<TrainingSession[]>('/training-sessions')
+    return this.request<TrainingSession[]>('/training')
   }
 
   async createTrainingSession(
     session: Omit<TrainingSession, 'id' | 'date'>
   ): Promise<TrainingSession> {
-    return this.request<TrainingSession>('/training-sessions', {
+    return this.request<TrainingSession>('/training', {
       method: 'POST',
       body: JSON.stringify(session)
     })
   }
 
-  // SM-2 Review API
-  async getWordsForReview(request: WordsForReviewRequest): Promise<Word[]> {
-    return this.request<Word[]>('/training-sessions/words-for-review', {
+  // SM-2 API
+  async getWordsForReview(wordIds: string[], limit?: number): Promise<Word[]> {
+    return this.request<Word[]>('/training/words-for-review', {
       method: 'POST',
-      body: JSON.stringify(request)
+      body: JSON.stringify({ wordIds, limit })
     })
   }
 
-  async submitReview(request: ReviewRequest): Promise<ReviewResult> {
-    return this.request<ReviewResult>('/training-sessions/review', {
+  async submitReview(
+    wordId: string,
+    quality: number
+  ): Promise<{
+    word: Word
+    previous: {
+      easinessFactor: number
+      interval: number
+      repetitions: number
+    }
+    new: {
+      easinessFactor: number
+      interval: number
+      repetitions: number
+    }
+    quality: number
+  }> {
+    return this.request('/training/review', {
       method: 'POST',
-      body: JSON.stringify(request)
+      body: JSON.stringify({ wordId, quality })
     })
   }
 

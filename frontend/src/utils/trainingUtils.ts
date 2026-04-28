@@ -1,6 +1,6 @@
 import type { DictionaryEntry, QuestionType, TrainingQuestion } from '../types'
 
-export const MIN_WORDS_FOR_TRAINING = 3
+export const MIN_WORDS_FOR_TRAINING = 4
 export const MAX_WORDS_PER_TRAINING = 40
 export const TRAINING_STORAGE_KEY = 'training_session'
 
@@ -93,8 +93,28 @@ export const buildQuestionByType = (
   }
 }
 
+export const isWordDueForReview = (word: DictionaryEntry): boolean => {
+  if (!word.sm2NextReview) return true
+  return new Date(word.sm2NextReview) <= new Date()
+}
+
+export const selectWordsForTraining = (
+  dictionary: DictionaryEntry[],
+  maxWords: number = MAX_WORDS_PER_TRAINING
+): DictionaryEntry[] => {
+  return dictionary
+    .filter((word) => isWordDueForReview(word))
+    .sort((a, b) => {
+      if (!a.sm2NextReview) return -1
+      if (!b.sm2NextReview) return 1
+      return new Date(a.sm2NextReview).getTime() - new Date(b.sm2NextReview).getTime()
+    })
+    .slice(0, maxWords)
+}
+
 export const buildQuestions = (dictionary: DictionaryEntry[]): TrainingQuestion[] => {
-  const shuffledWords = shuffleArray(dictionary)
+  const wordsForTraining = selectWordsForTraining(dictionary)
+  const shuffledWords = shuffleArray(wordsForTraining)
 
   return shuffledWords.map((word) => {
     const type = getRandomQuestionType()
