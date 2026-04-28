@@ -25,6 +25,8 @@ export function DeckList({
   onStartTraining,
   onDeleteDeck,
   onRenameDeck,
+  onAddWordToDeck,
+  onRemoveWordFromDeck,
   expandedDeckId,
   onToggleExpand
 }: DeckListProps): React.ReactElement {
@@ -153,17 +155,21 @@ export function DeckList({
                     </h4>
                     <div className='deck-card__available-words'>
                       {availableWords.slice(0, 10).map((word) => (
-                        <div
+                        <button
                           key={`available-${word.id}`}
+                          type='button'
+                          onClick={() => onAddWordToDeck?.(deck.id, word.id)}
                           className='deck-card__available-word'
+                          disabled={loading}
                         >
                           <span className='deck-card__available-word-term'>
                             {word.term}
                           </span>
+                          –
                           <span className='deck-card__available-word-translation'>
                             {word.translation}
                           </span>
-                        </div>
+                        </button>
                       ))}
                       {availableWords.length > 10 && (
                         <div className='deck-card__more-words'>
@@ -193,6 +199,7 @@ export function DeckList({
                             <span className='deck-card__word-term'>
                               {word.term}
                             </span>
+                            –
                             <span className='deck-card__word-translation'>
                               {word.translation}
                             </span>
@@ -202,6 +209,14 @@ export function DeckList({
                               {word.difficulty}
                             </span>
                           </div>
+                          <Button
+                            variant='danger'
+                            size='sm'
+                            onClick={() => onRemoveWordFromDeck?.(deck.id, word.id)}
+                            disabled={loading}
+                          >
+                            ×
+                          </Button>
                         </div>
                       ))}
                     </div>

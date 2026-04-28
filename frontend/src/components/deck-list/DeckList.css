@@ -124,8 +124,8 @@
 }
 
 .deck-card__available-words {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   max-height: 200px;
   overflow-y: auto;
@@ -133,13 +133,17 @@
 
 .deck-card__available-word {
   display: flex;
-  align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 8px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font: inherit;
 }
 
 .deck-card__available-word:hover {
@@ -147,7 +151,6 @@
 }
 
 .deck-card__available-word-term {
-  flex: 1;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -209,7 +212,6 @@
 }
 
 .deck-card__word-term {
-  flex: 1;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -242,6 +244,32 @@
   color: var(--danger);
 }
 
+.deck-card__word-remove {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.deck-card__word-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.deck-card__word-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .deck-card__header {
     flex-direction: column;
@@ -258,6 +286,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+
+  .deck-card__available-words {
+    grid-template-columns: 1fr;
   }
 
   .deck-card__available-word {
