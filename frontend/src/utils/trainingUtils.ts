@@ -113,8 +113,7 @@ export const selectWordsForTraining = (
 }
 
 export const buildQuestions = (dictionary: DictionaryEntry[]): TrainingQuestion[] => {
-  const wordsForTraining = selectWordsForTraining(dictionary)
-  const shuffledWords = shuffleArray(wordsForTraining)
+  const shuffledWords = shuffleArray(dictionary)
 
   return shuffledWords.map((word) => {
     const type = getRandomQuestionType()

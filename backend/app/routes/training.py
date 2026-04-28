@@ -7,7 +7,7 @@ from app import sm2
 
 training_bp = Blueprint('training', __name__)
 
-
+# Получение списка всех сессий тренировок
 @training_bp.route('', methods=['GET'])
 def list_sessions():
     sessions = TrainingSession.query.order_by(
@@ -15,6 +15,8 @@ def list_sessions():
     return jsonify([s.to_dict() for s in sessions])
 
 
+
+# Создание новой сессии тренировки
 @training_bp.route('', methods=['POST'])
 def create_session():
     data = request.get_json(silent=True)
@@ -37,6 +39,7 @@ def create_session():
     if not isinstance(accuracy, int) or accuracy < 0 or accuracy > 100:
         return jsonify({'error': 'accuracy must be an integer between 0 and 100'}), 400
 
+    # Парсинг даты
     date_str = data.get('date')
     if date_str:
         try:
@@ -52,6 +55,7 @@ def create_session():
     if not isinstance(correct_word_ids, list) or not isinstance(wrong_word_ids, list):
         return jsonify({'error': 'correctWordIds and wrongWordIds must be arrays'}), 400
 
+    # Создание сессии
     session = TrainingSession(
         date=date,
         total_questions=total_questions,
@@ -83,6 +87,7 @@ def get_words_for_review():
         return jsonify({'error': 'limit must be a positive integer'}), 400
     
     now = datetime.now(timezone.utc)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
     
     query = Word.query
     if word_ids:
@@ -90,7 +95,7 @@ def get_words_for_review():
     
     # Получение слов для повторения
     words = query.filter(
-        (Word.sm2_next_review == None) | (Word.sm2_next_review <= now)
+        (Word.sm2_next_review == None) | (Word.sm2_next_review <= today_end)
     ).order_by(
         Word.sm2_next_review.asc().nullsfirst()
     ).limit(limit).all()
@@ -154,4 +159,27 @@ def record_review():
             'repetitions': new_repetitions
         },
         'quality': quality
+    })
+
+
+@training_bp.route('/stats', methods=['GET'])
+def get_sm2_stats():
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    # Слова, готовые к повторению
+    words_due_today = Word.query.filter(
+        (Word.sm2_next_review == None) | (Word.sm2_next_review <= today_end)
+    ).count()
+
+    # Повторенные слова
+    words_reviewed_today = Word.query.filter(
+        Word.sm2_last_review >= today_start,
+        Word.sm2_last_review <= today_end
+    ).count()
+
+    return jsonify({
+        'wordsDueToday': words_due_today,
+        'wordsReviewedToday': words_reviewed_today
     })

@@ -44,7 +44,6 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   const [questionState, setQuestionState] = useState<QuestionState>({
     currentIndex: 0,
     selectedOptionId: null,
-
     isCorrect: null
   })
   const [correctWordIds, setCorrectWordIds] = useState<string[]>([])
@@ -54,6 +53,9 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
 		TrainingQuestion[] | null
 	>(null)
   const [trainingWords, setTrainingWords] = useState<DictionaryEntry[]>([])
+  const [wordsDueToday, setWordsDueToday] = useState<number>(0)
+  const [wordsReviewedToday, setWordsReviewedToday] = useState<number>(0)
+  const [isStartingTraining, setIsStartingTraining] = useState<boolean>(false)
   const sessionSavedRef = useRef<boolean>(false)
   const questionStartTimeRef = useRef<number>(0)
 
@@ -81,6 +83,20 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
         localStorage.removeItem(TRAINING_STORAGE_KEY)
       }
     }
+  }, [])
+
+  // Загрузка статистики SM-2
+  useEffect(() => {
+    const loadSM2Stats = async () => {
+      try {
+        const stats = await apiClient.getSM2Stats()
+        setWordsDueToday(stats.wordsDueToday)
+        setWordsReviewedToday(stats.wordsReviewedToday)
+      } catch (error) {
+        console.error('Failed to load SM-2 stats:', error)
+      }
+    }
+    loadSM2Stats()
   }, [])
 
   // Get current deck name for display
@@ -113,10 +129,13 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   const questions = useMemo(() => {
     if (savedQuestions) return savedQuestions
     if (trainingWords.length < MIN_WORDS_FOR_TRAINING) {
+      console.log('questions: trainingWords.length < MIN_WORDS_FOR_TRAINING', trainingWords.length, '<', MIN_WORDS_FOR_TRAINING)
       return []
     }
 
-    return buildQuestions(trainingWords)
+    const built = buildQuestions(trainingWords)
+    console.log('questions: построено', built.length, 'вопросов из', trainingWords.length, 'слов')
+    return built
   }, [trainingWords, savedQuestions])
 
   const currentQuestion: TrainingQuestion | undefined =
@@ -128,6 +147,22 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       questionStartTimeRef.current = Date.now()
     }
   }, [step, currentQuestion])
+
+  useEffect(() => {
+    console.log('useEffect: isStartingTraining=', isStartingTraining, 'trainingWords.length=', trainingWords.length)
+    if (isStartingTraining && trainingWords.length > 0) {
+      console.log('Переключение на questions, trainingWords:', trainingWords)
+      setStep('questions')
+      setQuestionState({
+        currentIndex: 0,
+        selectedOptionId: null,
+        isCorrect: null
+      })
+      setCorrectWordIds([])
+      setWrongWordIds([])
+      setIsStartingTraining(false)
+    }
+  }, [isStartingTraining, trainingWords])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -154,12 +189,23 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   ])
 
   const handleStartTraining = async () => {
-    // Clear any saved session
+    // Clear any saved session and go to idle
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TRAINING_STORAGE_KEY)
     }
     setSavedQuestions(null)
     sessionSavedRef.current = false
+    setTrainingWords([])
+    setCorrectWordIds([])
+    setWrongWordIds([])
+    setStep('idle')
+  }
+
+  const handleLoadAndStartTraining = async () => {
+    setTrainingWords([])
+    setCorrectWordIds([])
+    setWrongWordIds([])
+    setIsStartingTraining(true)
 
     // Загрузка слов для повторения
     try {
@@ -171,20 +217,20 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
         apiClient.wordToDictionaryEntry(w)
       )
       console.log('Слова для повторения:', dictionaryEntries)
-      setTrainingWords(dictionaryEntries)
+
+      if (dictionaryEntries.length === 0) {
+        // Если по SM-2 на сегодня слов нет — обычная тренировка по всем словам
+        const fallbackWords = trainingDictionary.slice(0, MAX_WORDS_PER_TRAINING)
+        console.log('Обычная тренировка (SM-2 пусто):', fallbackWords)
+        setTrainingWords(fallbackWords)
+      } else {
+        setTrainingWords(dictionaryEntries)
+      }
     } catch (error) {
       console.error('Failed to load training words:', error)
       setTrainingWords([])
+      setIsStartingTraining(false)
     }
-
-    setStep('questions')
-    setQuestionState({
-      currentIndex: 0,
-      selectedOptionId: null,
-      isCorrect: null
-    })
-    setCorrectWordIds([])
-    setWrongWordIds([])
   }
 
   // Восстановление слов для повторения из сохраненных вопросов
@@ -198,11 +244,6 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   }
 
   const handleResetTraining = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(TRAINING_STORAGE_KEY)
-    }
-    setSavedQuestions(null)
-    sessionSavedRef.current = false
     handleStartTraining()
   }
 
@@ -289,6 +330,8 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     }))
   }
 
+  console.log('Render: step=', step, 'questions.length=', questions.length, 'currentQuestion=', currentQuestion)
+
   // Idle state
   if (step === 'idle') {
     return (
@@ -300,10 +343,12 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
         wrongCount={wrongWordIds.length}
         trainingDictionary={trainingDictionary}
         currentDeckName={currentDeckName}
-        onStartTraining={handleStartTraining}
+        onStartTraining={handleLoadAndStartTraining}
         onContinueTraining={handleContinueTraining}
         onResetTraining={handleResetTraining}
         onGoToDictionary={onGoToDictionary}
+        wordsDueToday={wordsDueToday}
+        wordsReviewedToday={wordsReviewedToday}
       />
     )
   }

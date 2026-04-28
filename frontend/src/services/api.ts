@@ -253,6 +253,17 @@ class ApiClient {
     })
   }
 
+  // Получение статистики SM-2
+  async getSM2Stats(): Promise<{
+    wordsDueToday: number
+    wordsReviewedToday: number
+  }> {
+    return this.request<{
+      wordsDueToday: number
+      wordsReviewedToday: number
+    }>('/training/stats')
+  }
+
   // Helper methods to convert between API types and frontend types
   wordToDictionaryEntry(word: any): DictionaryEntry {
     const imagePath = word.imageUrl || word.image_url || null
