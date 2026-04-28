@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useRef } from 'react'
+import { Button } from '../button/Button'
 import './ImageUpload.css'
 
 type ImageUploadProps = {
@@ -36,21 +37,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <div className='image-upload'>
-      <label className='image-upload__label'>{label}</label>
+      <label htmlFor='image-upload' className='image-upload__label'>{label}</label>
       <div
         className={`image-upload__area image-upload__area--large ${previewUrl ? 'image-upload__area--has-image' : ''}`}
       >
         {previewUrl ? (
           <div className='image-upload__preview'>
             <img src={previewUrl} alt='Preview' />
-            <button
-              type='button'
-              className='image-upload__remove'
+            <Button
+              variant='ghost'
+              size='sm'
               onClick={handleRemove}
               disabled={disabled}
             >
               ✕
-            </button>
+            </Button>
           </div>
         ) : (
           <div className='image-upload__placeholder'>

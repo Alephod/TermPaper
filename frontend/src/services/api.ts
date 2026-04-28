@@ -16,10 +16,9 @@ export const extractRelativeImagePath = (
   fullUrl: string | null
 ): string | null => {
   if (!fullUrl) return null
-  if (fullUrl.startsWith(API_BASE_URL)) {
-    return fullUrl.slice(API_BASE_URL.length)
-  }
-  return fullUrl
+  // Извлекаем только имя файла
+  const parts = fullUrl.split('/')
+  return parts[parts.length - 1] || null
 }
 
 class ApiError extends Error {
@@ -210,16 +209,58 @@ class ApiClient {
 
   // Training Sessions API
   async getTrainingSessions(): Promise<TrainingSession[]> {
-    return this.request<TrainingSession[]>('/training-sessions')
+    return this.request<TrainingSession[]>('/training')
   }
 
   async createTrainingSession(
     session: Omit<TrainingSession, 'id' | 'date'>
   ): Promise<TrainingSession> {
-    return this.request<TrainingSession>('/training-sessions', {
+    return this.request<TrainingSession>('/training', {
       method: 'POST',
       body: JSON.stringify(session)
     })
+  }
+
+  // SM-2 API
+  async getWordsForReview(wordIds: string[], limit?: number): Promise<Word[]> {
+    return this.request<Word[]>('/training/words-for-review', {
+      method: 'POST',
+      body: JSON.stringify({ wordIds, limit })
+    })
+  }
+
+  async submitReview(
+    wordId: string,
+    quality: number
+  ): Promise<{
+    word: Word
+    previous: {
+      easinessFactor: number
+      interval: number
+      repetitions: number
+    }
+    new: {
+      easinessFactor: number
+      interval: number
+      repetitions: number
+    }
+    quality: number
+  }> {
+    return this.request('/training/review', {
+      method: 'POST',
+      body: JSON.stringify({ wordId, quality })
+    })
+  }
+
+  // Получение статистики SM-2
+  async getSM2Stats(): Promise<{
+    wordsDueToday: number
+    wordsReviewedToday: number
+  }> {
+    return this.request<{
+      wordsDueToday: number
+      wordsReviewedToday: number
+    }>('/training/stats')
   }
 
   // Helper methods to convert between API types and frontend types
@@ -238,8 +279,13 @@ class ApiClient {
       difficulty: word.difficulty as Difficulty,
       example: word.example || '',
       exampleTranslation:
-				word.exampleTranslation || word.example_translation || '',
-      imageUrl: fullImageUrl
+			word.exampleTranslation || word.example_translation || '',
+      imageUrl: fullImageUrl,
+      sm2EasinessFactor: word.sm2EasinessFactor ?? null,
+      sm2Interval: word.sm2Interval ?? null,
+      sm2Repetitions: word.sm2Repetitions ?? null,
+      sm2NextReview: word.sm2NextReview ?? null,
+      sm2LastReview: word.sm2LastReview ?? null
     }
   }
 

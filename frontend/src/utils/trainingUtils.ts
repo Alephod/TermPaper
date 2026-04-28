@@ -1,6 +1,6 @@
 import type { DictionaryEntry, QuestionType, TrainingQuestion } from '../types'
 
-export const MIN_WORDS_FOR_TRAINING = 3
+export const MIN_WORDS_FOR_TRAINING = 4
 export const MAX_WORDS_PER_TRAINING = 40
 export const TRAINING_STORAGE_KEY = 'training_session'
 
@@ -93,18 +93,45 @@ export const buildQuestionByType = (
   }
 }
 
+export const isWordDueForReview = (word: DictionaryEntry): boolean => {
+  if (!word.sm2NextReview) return true
+  return new Date(word.sm2NextReview) <= new Date()
+}
+
+export const selectWordsForTraining = (
+  dictionary: DictionaryEntry[],
+  maxWords: number = MAX_WORDS_PER_TRAINING
+): DictionaryEntry[] => {
+  return dictionary
+    .filter((word) => isWordDueForReview(word))
+    .sort((a, b) => {
+      if (!a.sm2NextReview) return -1
+      if (!b.sm2NextReview) return 1
+      return new Date(a.sm2NextReview).getTime() - new Date(b.sm2NextReview).getTime()
+    })
+    .slice(0, maxWords)
+}
+
 export const buildQuestions = (dictionary: DictionaryEntry[]): TrainingQuestion[] => {
   const shuffledWords = shuffleArray(dictionary)
 
   return shuffledWords.map((word) => {
     const type = getRandomQuestionType()
-    const otherWords = dictionary
+    const otherWords = shuffledWords
       .filter((entry) => entry.id !== word.id)
       .slice(0, 3)
 
-    // Skip image questions if word has no image
-    if ((type === 'image-to-term' || type === 'term-to-image') && !word.imageUrl) {
+    // Проверка что у проверяемого слова есть картинка
+    if (type === 'image-to-term' && !word.imageUrl) {
       return buildQuestionByType(word, otherWords, 'term-to-translation')
+    }
+
+    // Проверка что у всех вариантов ответа есть картинки
+    if (type === 'term-to-image') {
+      const hasMissingImage = [word, ...otherWords].some(w => !w.imageUrl)
+      if (hasMissingImage) {
+        return buildQuestionByType(word, otherWords, 'term-to-translation')
+      }
     }
 
     return buildQuestionByType(word, otherWords, type)

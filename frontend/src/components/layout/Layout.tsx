@@ -1,33 +1,24 @@
 import type { ReactNode } from 'react'
-import React from 'react'
 import { NavLink } from 'react-router-dom'
+import { Button } from '../ui/button/Button'
 
 import './Layout.css'
 
 type LayoutProps = {
   children: ReactNode;
-
   isDictionaryError: boolean;
-
-  isHistoryError: boolean;
 };
 
 const navItems = [
   { path: '/', label: 'Главная', icon: '🏠' },
-
   { path: '/training', label: 'Тренировка', icon: '🎯' },
-
   { path: '/dictionary', label: 'Словарь', icon: '📝' },
-
   { path: '/decks', label: 'Колоды', icon: '🎴' }
 ]
 
 export function Layout({
   children,
-
-  isDictionaryError,
-
-  isHistoryError
+  isDictionaryError
 }: LayoutProps): JSX.Element {
   return (
     <div className='layout'>
@@ -57,7 +48,7 @@ export function Layout({
       </header>
 
       <main className='container layout__main'>
-        {(isDictionaryError || isHistoryError) && (
+        {isDictionaryError && (
           <div className='layout__error-banner'>
             <div className='layout__error-content'>
               <span className='layout__error-icon'>⚠️</span>
@@ -69,19 +60,15 @@ export function Layout({
                     к серверу.
                   </p>
                 )}
-
-                {isHistoryError && (
-                  <p>Произошла ошибка при загрузке истории тренировок.</p>
-                )}
               </div>
 
-              <button
-                type='button'
-                className='layout__error-close'
+              <Button
+                variant='ghost'
+                size='sm'
                 onClick={() => window.location.reload()}
               >
                 ⟳
-              </button>
+              </Button>
             </div>
           </div>
         )}

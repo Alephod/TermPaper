@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { QuestionCard } from '../../components/training/QuestionCard'
 import { TrainingIdle } from '../../components/training/TrainingIdle'
 import { TrainingSummary } from '../../components/training/TrainingSummary'
+import { apiClient } from '../../services/api'
 import type {
   DictionaryDeck,
   DictionaryEntry,
@@ -19,18 +20,18 @@ import {
 import './TrainingPage.css'
 
 type TrainingPageProps = {
-  dictionary: DictionaryEntry[];
-  decks: DictionaryDeck[];
-  onFinishSession: (session: TrainingSession) => void;
-  onGoToDictionary: () => void;
+	dictionary: DictionaryEntry[];
+	decks: DictionaryDeck[];
+	onFinishSession: (session: TrainingSession) => void;
+	onGoToDictionary: () => void;
 };
 
 type TrainingStep = 'idle' | 'questions' | 'summary';
 
 type QuestionState = {
-  currentIndex: number;
-  selectedOptionId: string | null;
-  isCorrect: boolean | null;
+	currentIndex: number;
+	selectedOptionId: string | null;
+	isCorrect: boolean | null;
 };
 
 export const TrainingPage: React.FC<TrainingPageProps> = ({
@@ -43,24 +44,28 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   const [questionState, setQuestionState] = useState<QuestionState>({
     currentIndex: 0,
     selectedOptionId: null,
-
     isCorrect: null
   })
   const [correctWordIds, setCorrectWordIds] = useState<string[]>([])
   const [wrongWordIds, setWrongWordIds] = useState<string[]>([])
 
   const [savedQuestions, setSavedQuestions] = useState<
-    TrainingQuestion[] | null
-  >(null)
-
+		TrainingQuestion[] | null
+	>(null)
+  const [trainingWords, setTrainingWords] = useState<DictionaryEntry[]>([])
+  const [wordsDueToday, setWordsDueToday] = useState<number>(0)
+  const [wordsReviewedToday, setWordsReviewedToday] = useState<number>(0)
+  const [isStartingTraining, setIsStartingTraining] = useState<boolean>(false)
+  const [sm2WordIds, setSm2WordIds] = useState<Set<string>>(new Set())
   const sessionSavedRef = useRef<boolean>(false)
+  const questionStartTimeRef = useRef<number>(0)
 
   // Get current deck ID from localStorage (set when clicking "Train" in deck)
 
   const currentDeckId =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('currentDeckId')
-      : null
+		typeof window !== 'undefined'
+		  ? localStorage.getItem('currentDeckId')
+		  : null
 
   // Restore saved training session on mount
   useEffect(() => {
@@ -81,6 +86,20 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     }
   }, [])
 
+  // Загрузка статистики SM-2
+  useEffect(() => {
+    const loadSM2Stats = async () => {
+      try {
+        const stats = await apiClient.getSM2Stats()
+        setWordsDueToday(stats.wordsDueToday)
+        setWordsReviewedToday(stats.wordsReviewedToday)
+      } catch (error) {
+        console.error('Failed to load SM-2 stats:', error)
+      }
+    }
+    loadSM2Stats()
+  }, [step])
+
   // Get current deck name for display
 
   const currentDeckName = useMemo(() => {
@@ -91,32 +110,56 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     return deck?.name || null
   }, [decks, currentDeckId])
 
-  // Filter dictionary based on current deck
+  // Get word IDs for current deck
+  const deckWordIds = useMemo(() => {
+    if (!currentDeckId) return []
+    const deck = decks.find((d) => d.id === currentDeckId)
+    return deck?.wordIds || []
+  }, [decks, currentDeckId])
+
+  // Filter dictionary for TrainingIdle display (all words in deck/dictionary)
   const trainingDictionary = useMemo(() => {
-    if (savedQuestions) {
-      // Use saved questions, don't rebuild
-      return []
-    }
     if (!currentDeckId) {
-      // Limit to max 40 words for "all words" training
       return dictionary.slice(0, MAX_WORDS_PER_TRAINING)
     }
-
     const deck = decks.find((d) => d.id === currentDeckId)
-
     if (!deck) return dictionary.slice(0, MAX_WORDS_PER_TRAINING)
-
     return dictionary.filter((word) => deck.wordIds.includes(word.id))
-  }, [dictionary, decks, currentDeckId, savedQuestions])
+  }, [dictionary, decks, currentDeckId])
 
   const questions = useMemo(() => {
     if (savedQuestions) return savedQuestions
-    if (trainingDictionary.length < MIN_WORDS_FOR_TRAINING) {
+    if (trainingWords.length < MIN_WORDS_FOR_TRAINING) {
       return []
     }
 
-    return buildQuestions(trainingDictionary)
-  }, [trainingDictionary, savedQuestions])
+    const built = buildQuestions(trainingWords)
+    return built
+  }, [trainingWords, savedQuestions])
+
+  const currentQuestion: TrainingQuestion | undefined =
+		questions[questionState.currentIndex]
+
+  // Обновление времени начала вопроса при смене вопроса
+  useEffect(() => {
+    if (step === 'questions' && currentQuestion) {
+      questionStartTimeRef.current = Date.now()
+    }
+  }, [step, currentQuestion])
+
+  useEffect(() => {
+    if (isStartingTraining && trainingWords.length > 0) {
+      setStep('questions')
+      setQuestionState({
+        currentIndex: 0,
+        selectedOptionId: null,
+        isCorrect: null
+      })
+      setCorrectWordIds([])
+      setWrongWordIds([])
+      setIsStartingTraining(false)
+    }
+  }, [isStartingTraining, trainingWords])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -126,13 +169,9 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       TRAINING_STORAGE_KEY,
       JSON.stringify({
         questions: savedQuestions || questions,
-
         questionState,
-
         correctWordIds,
-
         wrongWordIds,
-
         deckId: currentDeckId
       })
     )
@@ -146,59 +185,103 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     currentDeckId
   ])
 
-  const currentQuestion: TrainingQuestion | undefined =
-    questions[questionState.currentIndex]
-
-  const handleStartTraining = () => {
-    // Clear any saved session
+  const handleStartTraining = async () => {
+    // Clear any saved session and go to idle
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TRAINING_STORAGE_KEY)
     }
     setSavedQuestions(null)
     sessionSavedRef.current = false
-
-    setStep('questions')
-    setQuestionState({
-      currentIndex: 0,
-      selectedOptionId: null,
-
-      isCorrect: null
-    })
+    setTrainingWords([])
     setCorrectWordIds([])
     setWrongWordIds([])
+    setSm2WordIds(new Set())
+    setStep('idle')
   }
 
+  const handleLoadAndStartTraining = async () => {
+    setTrainingWords([])
+    setCorrectWordIds([])
+    setWrongWordIds([])
+    setSm2WordIds(new Set())
+    setIsStartingTraining(true)
+
+    // Загрузка слов для повторения
+    try {
+      const words = await apiClient.getWordsForReview(
+        deckWordIds,
+        MAX_WORDS_PER_TRAINING
+      )
+      const dictionaryEntries = words.map((w) =>
+        apiClient.wordToDictionaryEntry(w)
+      )
+
+      const sm2Words = dictionaryEntries
+      const needed = Math.min(MAX_WORDS_PER_TRAINING - sm2Words.length, trainingDictionary.length)
+      const additionalWords = trainingDictionary
+        .filter(w => !sm2Words.some(sm2 => sm2.id === w.id)) // исключаем дубликаты
+        .slice(0, needed)
+      setSm2WordIds(new Set(sm2Words.map(w => w.id)))
+      setTrainingWords([...sm2Words, ...additionalWords])
+    } catch (error) {
+      console.error('Failed to load training words:', error)
+      setTrainingWords([])
+      setIsStartingTraining(false)
+    }
+  }
+
+  // Восстановление слов для повторения из сохраненных вопросов
   const handleContinueTraining = () => {
-    // Already restored from localStorage in useEffect
+    if (savedQuestions && savedQuestions.length > 0) {
+      const wordIds = [...new Set(savedQuestions.map((q) => q.wordId))]
+      const words = dictionary.filter((w) => wordIds.includes(w.id))
+      setTrainingWords(words)
+    }
     setStep('questions')
   }
 
   const handleResetTraining = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(TRAINING_STORAGE_KEY)
-    }
-    setSavedQuestions(null)
-    sessionSavedRef.current = false
     handleStartTraining()
   }
 
-  const handleSelectOption = (optionId: string): void => {
+  const handleSelectOption = async (optionId: string): Promise<void> => {
     if (!currentQuestion) return
 
     const isCorrect = optionId === currentQuestion.correctOptionId
+    const responseTime = Date.now() - questionStartTimeRef.current
 
     setQuestionState((previous) => ({
       ...previous,
       selectedOptionId: optionId,
-
       isCorrect
     }))
 
+    let quality = 0
     if (isCorrect) {
       setCorrectWordIds((previous) => [...previous, currentQuestion.wordId])
+      // Вычисление качества по времени ответа (SM-2: 0-5)
+      if (responseTime < 5000) {
+        quality = 5 // Менее 5 сек - идеальный ответ
+      } else if (responseTime < 10000) {
+        quality = 4 // 5-10 сек - хороший ответ
+      } else if (responseTime < 15000) {
+        quality = 3 // 10-15 сек - нормальный ответ
+      } else {
+        quality = 2 // Более 15 сек - медленный ответ
+      }
     } else {
       setWrongWordIds((previous) => [...previous, currentQuestion.wordId])
+      quality = 0 // Неправильный ответ
     }
+
+    // Отправка качества ответа на бэкенд только тех слов, которые еще не были оценены
+    if (sm2WordIds.has(currentQuestion.wordId)) {
+      try {
+        await apiClient.submitReview(currentQuestion.wordId, quality)
+      } catch (error) {
+        console.error('Failed to submit review:', error)
+      }
+    } 
   }
 
   const handleNextQuestion = (): void => {
@@ -213,9 +296,9 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       const correctAnswers = correctWordIds.length
 
       const accuracy =
-        totalQuestions === 0
-          ? 0
-          : Math.round((correctAnswers / totalQuestions) * 100)
+				totalQuestions === 0
+				  ? 0
+				  : Math.round((correctAnswers / totalQuestions) * 100)
 
       const session: TrainingSession = {
         id: `session-${Date.now().toString()}`,
@@ -256,10 +339,12 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
         wrongCount={wrongWordIds.length}
         trainingDictionary={trainingDictionary}
         currentDeckName={currentDeckName}
-        onStartTraining={handleStartTraining}
+        onStartTraining={handleLoadAndStartTraining}
         onContinueTraining={handleContinueTraining}
         onResetTraining={handleResetTraining}
         onGoToDictionary={onGoToDictionary}
+        wordsDueToday={wordsDueToday}
+        wordsReviewedToday={wordsReviewedToday}
       />
     )
   }

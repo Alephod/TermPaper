@@ -42,6 +42,11 @@ class Word(db.Model):
     example = db.Column(db.String(500), nullable=False, default='')
     example_translation = db.Column(db.String(500), nullable=False, default='')
     image_path = db.Column(db.String(500), nullable=True)
+    sm2_easiness_factor = db.Column(db.Float, nullable=True, default=2.5)
+    sm2_interval = db.Column(db.Integer, nullable=True, default=0)
+    sm2_repetitions = db.Column(db.Integer, nullable=True, default=0)
+    sm2_next_review = db.Column(db.DateTime, nullable=True)
+    sm2_last_review = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=_utcnow)
     updated_at = db.Column(db.DateTime, nullable=False,
                            default=_utcnow, onupdate=_utcnow)
@@ -55,6 +60,11 @@ class Word(db.Model):
             'example': self.example,
             'exampleTranslation': self.example_translation,
             'imageUrl': f"/uploads/{self.image_path}" if self.image_path else None,
+            'sm2EasinessFactor': self.sm2_easiness_factor,
+            'sm2Interval': self.sm2_interval,
+            'sm2Repetitions': self.sm2_repetitions,
+            'sm2NextReview': self.sm2_next_review.isoformat() if self.sm2_next_review else None,
+            'sm2LastReview': self.sm2_last_review.isoformat() if self.sm2_last_review else None,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
         }

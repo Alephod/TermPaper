@@ -24,7 +24,8 @@ export default tseslint.config(
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'eol-last': ['error', 'always'],
       'jsx-quotes': ['error', 'prefer-single'],
-      'comma-dangle': ['error', 'never']
+      'comma-dangle': ['error', 'never'],
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   }
 )

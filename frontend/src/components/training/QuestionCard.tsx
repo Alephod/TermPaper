@@ -1,15 +1,15 @@
 import type React from 'react'
-import { Button } from '../ui/button/Button'
 import type { TrainingQuestion } from '../../types'
+import { Button } from '../ui/button/Button'
 
 interface QuestionCardProps {
-  question: TrainingQuestion;
-  selectedOptionId: string | null;
-  isCorrect: boolean | null;
-  currentIndex: number;
-  totalQuestions: number;
-  onSelectOption: (optionId: string) => void;
-  onNext: () => void;
+	question: TrainingQuestion;
+	selectedOptionId: string | null;
+	isCorrect: boolean | null;
+	currentIndex: number;
+	totalQuestions: number;
+	onSelectOption: (optionId: string) => void;
+	onNext: () => void;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
