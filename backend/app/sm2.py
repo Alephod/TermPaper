@@ -41,7 +41,7 @@ def calculate_sm2(
     elif new_repetitions == 2:
         new_interval = 6
     else:
-        new_interval = round(interval * easiness_factor)
+        new_interval = round(interval * new_ef)
     
     return (new_ef, new_interval, new_repetitions, quality)
 
