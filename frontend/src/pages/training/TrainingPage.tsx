@@ -56,6 +56,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   const [wordsDueToday, setWordsDueToday] = useState<number>(0)
   const [wordsReviewedToday, setWordsReviewedToday] = useState<number>(0)
   const [isStartingTraining, setIsStartingTraining] = useState<boolean>(false)
+  const [sm2WordIds, setSm2WordIds] = useState<Set<string>>(new Set())
   const sessionSavedRef = useRef<boolean>(false)
   const questionStartTimeRef = useRef<number>(0)
 
@@ -97,7 +98,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       }
     }
     loadSM2Stats()
-  }, [])
+  }, [step])
 
   // Get current deck name for display
 
@@ -129,12 +130,10 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   const questions = useMemo(() => {
     if (savedQuestions) return savedQuestions
     if (trainingWords.length < MIN_WORDS_FOR_TRAINING) {
-      console.log('questions: trainingWords.length < MIN_WORDS_FOR_TRAINING', trainingWords.length, '<', MIN_WORDS_FOR_TRAINING)
       return []
     }
 
     const built = buildQuestions(trainingWords)
-    console.log('questions: построено', built.length, 'вопросов из', trainingWords.length, 'слов')
     return built
   }, [trainingWords, savedQuestions])
 
@@ -149,9 +148,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
   }, [step, currentQuestion])
 
   useEffect(() => {
-    console.log('useEffect: isStartingTraining=', isStartingTraining, 'trainingWords.length=', trainingWords.length)
     if (isStartingTraining && trainingWords.length > 0) {
-      console.log('Переключение на questions, trainingWords:', trainingWords)
       setStep('questions')
       setQuestionState({
         currentIndex: 0,
@@ -198,6 +195,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     setTrainingWords([])
     setCorrectWordIds([])
     setWrongWordIds([])
+    setSm2WordIds(new Set())
     setStep('idle')
   }
 
@@ -205,6 +203,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
     setTrainingWords([])
     setCorrectWordIds([])
     setWrongWordIds([])
+    setSm2WordIds(new Set())
     setIsStartingTraining(true)
 
     // Загрузка слов для повторения
@@ -216,16 +215,14 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       const dictionaryEntries = words.map((w) =>
         apiClient.wordToDictionaryEntry(w)
       )
-      console.log('Слова для повторения:', dictionaryEntries)
 
-      if (dictionaryEntries.length === 0) {
-        // Если по SM-2 на сегодня слов нет — обычная тренировка по всем словам
-        const fallbackWords = trainingDictionary.slice(0, MAX_WORDS_PER_TRAINING)
-        console.log('Обычная тренировка (SM-2 пусто):', fallbackWords)
-        setTrainingWords(fallbackWords)
-      } else {
-        setTrainingWords(dictionaryEntries)
-      }
+      const sm2Words = dictionaryEntries
+      const needed = Math.min(MAX_WORDS_PER_TRAINING - sm2Words.length, trainingDictionary.length)
+      const additionalWords = trainingDictionary
+        .filter(w => !sm2Words.some(sm2 => sm2.id === w.id)) // исключаем дубликаты
+        .slice(0, needed)
+      setSm2WordIds(new Set(sm2Words.map(w => w.id)))
+      setTrainingWords([...sm2Words, ...additionalWords])
     } catch (error) {
       console.error('Failed to load training words:', error)
       setTrainingWords([])
@@ -264,7 +261,7 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       setCorrectWordIds((previous) => [...previous, currentQuestion.wordId])
       // Вычисление качества по времени ответа (SM-2: 0-5)
       if (responseTime < 5000) {
-        quality = 5 // Менее 5 сек - идеальный отв  ет
+        quality = 5 // Менее 5 сек - идеальный ответ
       } else if (responseTime < 10000) {
         quality = 4 // 5-10 сек - хороший ответ
       } else if (responseTime < 15000) {
@@ -277,13 +274,14 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       quality = 0 // Неправильный ответ
     }
 
-    // Отправка качества ответа на бэкенд
-    try {
-      console.log(`Отправка качества ответа: wordId=${currentQuestion.wordId}, quality=${quality}, responseTime=${responseTime}ms`)
-      await apiClient.submitReview(currentQuestion.wordId, quality)
-    } catch (error) {
-      console.error('Failed to submit review:', error)
-    }
+    // Отправка качества ответа на бэкенд только тех слов, которые еще не были оценены
+    if (sm2WordIds.has(currentQuestion.wordId)) {
+      try {
+        await apiClient.submitReview(currentQuestion.wordId, quality)
+      } catch (error) {
+        console.error('Failed to submit review:', error)
+      }
+    } 
   }
 
   const handleNextQuestion = (): void => {
@@ -329,8 +327,6 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
       isCorrect: null
     }))
   }
-
-  console.log('Render: step=', step, 'questions.length=', questions.length, 'currentQuestion=', currentQuestion)
 
   // Idle state
   if (step === 'idle') {

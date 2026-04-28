@@ -16,10 +16,9 @@ export const extractRelativeImagePath = (
   fullUrl: string | null
 ): string | null => {
   if (!fullUrl) return null
-  if (fullUrl.startsWith(API_BASE_URL)) {
-    return fullUrl.slice(API_BASE_URL.length)
-  }
-  return fullUrl
+  // Извлекаем только имя файла
+  const parts = fullUrl.split('/')
+  return parts[parts.length - 1] || null
 }
 
 class ApiError extends Error {
@@ -280,9 +279,8 @@ class ApiClient {
       difficulty: word.difficulty as Difficulty,
       example: word.example || '',
       exampleTranslation:
-				word.exampleTranslation || word.example_translation || '',
+			word.exampleTranslation || word.example_translation || '',
       imageUrl: fullImageUrl,
-      // SM-2 поля
       sm2EasinessFactor: word.sm2EasinessFactor ?? null,
       sm2Interval: word.sm2Interval ?? null,
       sm2Repetitions: word.sm2Repetitions ?? null,

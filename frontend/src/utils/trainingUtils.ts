@@ -117,13 +117,21 @@ export const buildQuestions = (dictionary: DictionaryEntry[]): TrainingQuestion[
 
   return shuffledWords.map((word) => {
     const type = getRandomQuestionType()
-    const otherWords = dictionary
+    const otherWords = shuffledWords
       .filter((entry) => entry.id !== word.id)
       .slice(0, 3)
 
-    // Skip image questions if word has no image
-    if ((type === 'image-to-term' || type === 'term-to-image') && !word.imageUrl) {
+    // Проверка что у проверяемого слова есть картинка
+    if (type === 'image-to-term' && !word.imageUrl) {
       return buildQuestionByType(word, otherWords, 'term-to-translation')
+    }
+
+    // Проверка что у всех вариантов ответа есть картинки
+    if (type === 'term-to-image') {
+      const hasMissingImage = [word, ...otherWords].some(w => !w.imageUrl)
+      if (hasMissingImage) {
+        return buildQuestionByType(word, otherWords, 'term-to-translation')
+      }
     }
 
     return buildQuestionByType(word, otherWords, type)

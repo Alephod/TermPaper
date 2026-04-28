@@ -5,7 +5,7 @@
 }
 
 .layout__header {
-  padding: 16px 32px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -70,7 +70,13 @@
 
 .layout__nav-button--active {
   background: var(--accent);
+
   color: white;
+
+  &:hover {
+    background: var(--accent);
+    color: white;
+  }
 }
 
 .layout__nav-icon {
@@ -123,10 +129,6 @@
 }
 
 @media (max-width: 840px) {
-  .layout__header {
-    padding: 12px 16px;
-  }
-
   .layout__main {
     padding: 16px;
   }

@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { DictionaryEntry } from '../../types'
+import { Button } from '../ui/button/Button'
 import './WordList.css'
 
 export type WordListProps = {
@@ -60,26 +61,24 @@ export function WordList({
             {(onEdit || onDelete) && (
               <div className='word-entry__actions'>
                 {onEdit && (
-                  <button
-                    type='button'
-                    className='word-entry__action-btn word-entry__action-btn--edit'
+                  <Button
+                    variant='ghost'
+                    size='sm'
                     onClick={() => onEdit(entry)}
                     disabled={loading}
-                    title='Редактировать'
                   >
                     ✏️
-                  </button>
+                  </Button>
                 )}
                 {onDelete && (
-                  <button
-                    type='button'
-                    className='word-entry__action-btn word-entry__action-btn--delete'
+                  <Button
+                    variant='danger'
+                    size='sm'
                     onClick={() => onDelete(entry.id)}
                     disabled={loading}
-                    title='Удалить'
                   >
                     🗑️
-                  </button>
+                  </Button>
                 )}
               </div>
             )}

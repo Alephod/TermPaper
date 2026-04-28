@@ -1,13 +1,18 @@
-import type { DictionaryEntry, TrainingSession, DictionaryDeck, Difficulty } from '../types'
-import { apiClient, ApiError } from './api'
+import type {
+  DictionaryDeck,
+  DictionaryEntry,
+  Difficulty,
+  TrainingSession
+} from '../types'
+import { apiClient } from './api'
 
 export class DataService {
   private static instance: DataService
   private cache: {
-    words: DictionaryEntry[]
-    decks: DictionaryDeck[]
-    sessions: TrainingSession[]
-  } = {
+		words: DictionaryEntry[];
+		decks: DictionaryDeck[];
+		sessions: TrainingSession[];
+	} = {
       words: [],
       decks: [],
       sessions: []
@@ -24,7 +29,9 @@ export class DataService {
   async loadWords(difficulty?: Difficulty): Promise<DictionaryEntry[]> {
     try {
       const words = await apiClient.getWords(difficulty)
-      this.cache.words = words.map(word => apiClient.wordToDictionaryEntry(word))
+      this.cache.words = words.map((word) =>
+        apiClient.wordToDictionaryEntry(word)
+      )
       return this.cache.words
     } catch (error) {
       console.error('Failed to load words:', error)
@@ -32,7 +39,9 @@ export class DataService {
     }
   }
 
-  async createWord(entry: Omit<DictionaryEntry, 'id'>): Promise<DictionaryEntry> {
+  async createWord(
+    entry: Omit<DictionaryEntry, 'id'>
+  ): Promise<DictionaryEntry> {
     try {
       const wordData = apiClient.dictionaryEntryToWord(entry)
       const word = await apiClient.createWord(wordData)
@@ -45,11 +54,14 @@ export class DataService {
     }
   }
 
-  async updateWord(id: string, updates: Partial<DictionaryEntry>): Promise<DictionaryEntry> {
+  async updateWord(
+    id: string,
+    updates: Partial<DictionaryEntry>
+  ): Promise<DictionaryEntry> {
     try {
       const word = await apiClient.updateWord(id, updates)
       const dictionaryEntry = apiClient.wordToDictionaryEntry(word)
-      const index = this.cache.words.findIndex(w => w.id === id)
+      const index = this.cache.words.findIndex((w) => w.id === id)
       if (index !== -1) {
         this.cache.words[index] = dictionaryEntry
       }
@@ -63,12 +75,12 @@ export class DataService {
   async deleteWord(id: string): Promise<void> {
     try {
       await apiClient.deleteWord(id)
-      this.cache.words = this.cache.words.filter(w => w.id !== id)
+      this.cache.words = this.cache.words.filter((w) => w.id !== id)
 
       // Remove word from all decks
-      this.cache.decks = this.cache.decks.map(deck => ({
+      this.cache.decks = this.cache.decks.map((deck) => ({
         ...deck,
-        wordIds: deck.wordIds.filter(wordId => wordId !== id)
+        wordIds: deck.wordIds.filter((wordId) => wordId !== id)
       }))
     } catch (error) {
       console.error('Failed to delete word:', error)
@@ -80,7 +92,7 @@ export class DataService {
     try {
       await apiClient.clearWords()
       this.cache.words = []
-      this.cache.decks = this.cache.decks.map(deck => ({
+      this.cache.decks = this.cache.decks.map((deck) => ({
         ...deck,
         wordIds: []
       }))
@@ -94,7 +106,9 @@ export class DataService {
   async loadDecks(): Promise<DictionaryDeck[]> {
     try {
       const decks = await apiClient.getDecks()
-      this.cache.decks = decks.map(deck => apiClient.deckToDictionaryDeck(deck))
+      this.cache.decks = decks.map((deck) =>
+        apiClient.deckToDictionaryDeck(deck)
+      )
       return this.cache.decks
     } catch (error) {
       console.error('Failed to load decks:', error)
@@ -102,7 +116,9 @@ export class DataService {
     }
   }
 
-  async createDeck(deck: Omit<DictionaryDeck, 'id' | 'wordIds'>): Promise<DictionaryDeck> {
+  async createDeck(
+    deck: Omit<DictionaryDeck, 'id' | 'wordIds'>
+  ): Promise<DictionaryDeck> {
     try {
       const deckData = apiClient.dictionaryDeckToDeck(deck)
       const createdDeck = await apiClient.createDeck(deckData)
@@ -115,14 +131,17 @@ export class DataService {
     }
   }
 
-  async updateDeck(id: string, updates: Partial<DictionaryDeck>): Promise<DictionaryDeck> {
+  async updateDeck(
+    id: string,
+    updates: Partial<DictionaryDeck>
+  ): Promise<DictionaryDeck> {
     try {
       const deck = await apiClient.updateDeck(id, {
         name: updates.name,
         wordIds: updates.wordIds
       })
       const dictionaryDeck = apiClient.deckToDictionaryDeck(deck)
-      const index = this.cache.decks.findIndex(d => d.id === id)
+      const index = this.cache.decks.findIndex((d) => d.id === id)
       if (index !== -1) {
         this.cache.decks[index] = dictionaryDeck
       }
@@ -136,14 +155,17 @@ export class DataService {
   async deleteDeck(id: string): Promise<void> {
     try {
       await apiClient.deleteDeck(id)
-      this.cache.decks = this.cache.decks.filter(d => d.id !== id)
+      this.cache.decks = this.cache.decks.filter((d) => d.id !== id)
     } catch (error) {
       console.error('Failed to delete deck:', error)
       throw error
     }
   }
 
-  async createWordInDeck(deckId: string, word: Omit<DictionaryEntry, 'id'>): Promise<{ word: DictionaryEntry; deck: DictionaryDeck }> {
+  async createWordInDeck(
+    deckId: string,
+    word: Omit<DictionaryEntry, 'id'>
+  ): Promise<{ word: DictionaryEntry; deck: DictionaryDeck }> {
     try {
       const wordData = apiClient.dictionaryEntryToWord(word)
       const result = await apiClient.createWordInDeck(deckId, wordData)
@@ -151,7 +173,7 @@ export class DataService {
       const dictionaryDeck = apiClient.deckToDictionaryDeck(result.deck)
 
       this.cache.words.push(dictionaryEntry)
-      const index = this.cache.decks.findIndex(d => d.id === deckId)
+      const index = this.cache.decks.findIndex((d) => d.id === deckId)
       if (index !== -1) {
         this.cache.decks[index] = dictionaryDeck
       }
@@ -163,12 +185,15 @@ export class DataService {
     }
   }
 
-  async addExistingWordToDeck(deckId: string, wordId: string): Promise<DictionaryDeck> {
+  async addExistingWordToDeck(
+    deckId: string,
+    wordId: string
+  ): Promise<DictionaryDeck> {
     try {
       const deck = await apiClient.addExistingWordToDeck(deckId, wordId)
       const dictionaryDeck = apiClient.deckToDictionaryDeck(deck)
 
-      const index = this.cache.decks.findIndex(d => d.id === deckId)
+      const index = this.cache.decks.findIndex((d) => d.id === deckId)
       if (index !== -1) {
         this.cache.decks[index] = dictionaryDeck
       }
@@ -185,9 +210,11 @@ export class DataService {
       await apiClient.removeWordFromDeck(deckId, wordId)
 
       // Update cache
-      const index = this.cache.decks.findIndex(d => d.id === deckId)
+      const index = this.cache.decks.findIndex((d) => d.id === deckId)
       if (index !== -1) {
-        this.cache.decks[index].wordIds = this.cache.decks[index].wordIds.filter(id => id !== wordId)
+        this.cache.decks[index].wordIds = this.cache.decks[
+          index
+        ].wordIds.filter((id) => id !== wordId)
       }
     } catch (error) {
       console.error('Failed to remove word from deck:', error)
@@ -199,7 +226,9 @@ export class DataService {
   async loadTrainingSessions(): Promise<TrainingSession[]> {
     try {
       const sessions = await apiClient.getTrainingSessions()
-      this.cache.sessions = sessions.map(session => apiClient.trainingSessionToTrainingSession(session))
+      this.cache.sessions = sessions.map((session) =>
+        apiClient.trainingSessionToTrainingSession(session)
+      )
       return this.cache.sessions
     } catch (error) {
       console.error('Failed to load training sessions:', error)
@@ -207,10 +236,13 @@ export class DataService {
     }
   }
 
-  async createTrainingSession(session: Omit<TrainingSession, 'id' | 'date'>): Promise<TrainingSession> {
+  async createTrainingSession(
+    session: Omit<TrainingSession, 'id' | 'date'>
+  ): Promise<TrainingSession> {
     try {
       const createdSession = await apiClient.createTrainingSession(session)
-      const formattedSession = apiClient.trainingSessionToTrainingSession(createdSession)
+      const formattedSession =
+				apiClient.trainingSessionToTrainingSession(createdSession)
       this.cache.sessions.unshift(formattedSession)
       return formattedSession
     } catch (error) {
@@ -242,11 +274,11 @@ export class DataService {
 
   // Utility methods
   getWordById(id: string): DictionaryEntry | undefined {
-    return this.cache.words.find(word => word.id === id)
+    return this.cache.words.find((word) => word.id === id)
   }
 
   getDeckById(id: string): DictionaryDeck | undefined {
-    return this.cache.decks.find(deck => deck.id === id)
+    return this.cache.decks.find((deck) => deck.id === id)
   }
 
   getWordsByDeck(deckId: string): DictionaryEntry[] {
@@ -254,15 +286,15 @@ export class DataService {
     if (!deck) return []
 
     return deck.wordIds
-      .map(wordId => this.getWordById(wordId))
+      .map((wordId) => this.getWordById(wordId))
       .filter((word): word is DictionaryEntry => word !== undefined)
   }
 
   async initializeData(): Promise<{
-    words: DictionaryEntry[]
-    decks: DictionaryDeck[]
-    sessions: TrainingSession[]
-  }> {
+		words: DictionaryEntry[];
+		decks: DictionaryDeck[];
+		sessions: TrainingSession[];
+	}> {
     try {
       const [words, decks, sessions] = await Promise.all([
         this.loadWords(),

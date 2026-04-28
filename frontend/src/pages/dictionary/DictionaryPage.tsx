@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Button } from '../../components/ui/button/Button'
 import { ImageUpload } from '../../components/ui/image-upload/ImageUpload'
 import { Input } from '../../components/ui/input/Input'
@@ -17,34 +17,23 @@ import type {
 import './DictionaryPage.css'
 
 type DictionaryPageProps = {
-  dictionary: DictionaryEntry[];
-
-  decks: DictionaryDeck[];
-
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
-
-  onUpdateDecks: (decks: DictionaryDeck[]) => void;
-
-  hasError: boolean;
-};
+  dictionary: DictionaryEntry[]
+  decks: DictionaryDeck[]
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void
+  onUpdateDecks: (decks: DictionaryDeck[]) => void
+  hasError: boolean
+}
 
 type FormState = {
-  id: string | null;
-
-  term: string;
-
-  translation: string;
-
-  example: string;
-
-  exampleTranslation: string;
-
-  difficulty: Difficulty;
-
-  imageUrl: string | null;
-
-  imageFile: File | null;
-};
+  id: string | null
+  term: string
+  translation: string
+  example: string
+  exampleTranslation: string
+  difficulty: Difficulty
+  imageUrl: string | null
+  imageFile: File | null
+}
 
 const buildEmptyFormState = (): FormState => ({
   id: null,
@@ -54,7 +43,6 @@ const buildEmptyFormState = (): FormState => ({
   exampleTranslation: '',
   difficulty: 'easy',
   imageUrl: null,
-
   imageFile: null
 })
 
@@ -66,6 +54,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
 
   hasError
 }) => {
+  const filterId = useId()
   const [filter, setFilter] = useState<FilterDifficulty>('all')
   const [formState, setFormState] = useState<FormState>(buildEmptyFormState())
   const [loading, setLoading] = useState<boolean>(false)
@@ -200,7 +189,6 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         const newEntry = await dataService.createWord(wordData)
 
         // Проверяем, что слово еще не добавлено в UI
-
         if (!dictionary.some((entry) => entry.id === newEntry.id)) {
           onUpdateDictionary([...dictionary, newEntry])
         }
@@ -431,11 +419,12 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         <div className='dictionary__section-header'>
           <h2 className='dictionary__section-title'>📚 Все слова</h2>
           <div className='dictionary__filter'>
-            <label className='dictionary__filter-label'>
+            <label htmlFor={filterId} className='dictionary__filter-label'>
               Фильтр по сложности:
             </label>
 
             <Select
+              id={filterId}
               value={filter}
               onChange={(event) =>
                 handleChangeFilter(event.target.value as FilterDifficulty)

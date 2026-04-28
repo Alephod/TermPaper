@@ -20,16 +20,9 @@ interface TrainingIdleProps {
 }
 
 export const TrainingIdle: React.FC<TrainingIdleProps> = ({
-  hasSavedSession,
-  savedQuestionsCount,
-  currentQuestionIndex,
-  correctCount,
-  wrongCount,
   trainingDictionary,
   currentDeckName,
   onStartTraining,
-  onContinueTraining,
-  onResetTraining,
   onGoToDictionary,
   wordsDueToday = 0,
   wordsReviewedToday = 0
@@ -110,6 +103,11 @@ export const TrainingIdle: React.FC<TrainingIdleProps> = ({
                 Слов на повторение нет. Тренировка по всем словам в словаре
               </p>
             )}
+            {wordsDueToday > 0 && (
+              <h3 className='training__sm2-message'>
+                Слов на повторение:
+              </h3>
+            )}
             <div className='training__sm2-progress'>
               <div className='training__stat'>
                 <span className='training__stat-label'>{wordsDueToday}</span>
@@ -121,7 +119,6 @@ export const TrainingIdle: React.FC<TrainingIdleProps> = ({
               </div>
             </div>
           </div>
-
 
           <Button variant='primary' size='lg' onClick={onStartTraining}>
             🚀 Начать тренировку
