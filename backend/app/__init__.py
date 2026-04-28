@@ -29,10 +29,7 @@ def create_app(config_name=None):
 
     app.register_blueprint(words_bp, url_prefix='/api/words')
     app.register_blueprint(decks_bp, url_prefix='/api/decks')
-    app.register_blueprint(training_bp, url_prefix='/api/training-sessions')
+    app.register_blueprint(training_bp, url_prefix='/api/training')
     app.register_blueprint(uploads_bp, url_prefix='/uploads')
-
-    from app.seed import register_seed_command
-    register_seed_command(app)
 
     return app
