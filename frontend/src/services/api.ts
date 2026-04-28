@@ -3,8 +3,11 @@ import type {
   DictionaryDeck,
   DictionaryEntry,
   Difficulty,
+  ReviewRequest,
+  ReviewResult,
   TrainingSession,
-  Word
+  Word,
+  WordsForReviewRequest
 } from '../types'
 
 export const API_BASE_URL =
@@ -222,6 +225,21 @@ class ApiClient {
     })
   }
 
+  // SM-2 Review API
+  async getWordsForReview(request: WordsForReviewRequest): Promise<Word[]> {
+    return this.request<Word[]>('/training-sessions/words-for-review', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+  }
+
+  async submitReview(request: ReviewRequest): Promise<ReviewResult> {
+    return this.request<ReviewResult>('/training-sessions/review', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+  }
+
   // Helper methods to convert between API types and frontend types
   wordToDictionaryEntry(word: any): DictionaryEntry {
     const imagePath = word.imageUrl || word.image_url || null
@@ -239,7 +257,13 @@ class ApiClient {
       example: word.example || '',
       exampleTranslation:
 				word.exampleTranslation || word.example_translation || '',
-      imageUrl: fullImageUrl
+      imageUrl: fullImageUrl,
+      // SM-2 поля
+      sm2EasinessFactor: word.sm2EasinessFactor ?? null,
+      sm2Interval: word.sm2Interval ?? null,
+      sm2Repetitions: word.sm2Repetitions ?? null,
+      sm2NextReview: word.sm2NextReview ?? null,
+      sm2LastReview: word.sm2LastReview ?? null
     }
   }
 
