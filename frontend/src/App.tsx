@@ -7,8 +7,7 @@ import { DecksPage } from './pages/decks/DecksPage'
 import { DictionaryPage } from './pages/dictionary/DictionaryPage'
 import { HomePage } from './pages/home/HomePage'
 import { TrainingPage } from './pages/training/TrainingPage'
-import { ApiError } from './services/api'
-import { dataService } from './services/dataService'
+import { ApiError, apiClient } from './services/api'
 import type { DictionaryDeck, DictionaryEntry, TrainingSession } from './types'
 
 export const App: React.FC = () => {
@@ -25,11 +24,11 @@ export const App: React.FC = () => {
         setLoading(true)
         setError(null)
 
-        const {
-          words,
-          decks: loadedDecks,
-          sessions
-        } = await dataService.initializeData()
+        const [words, loadedDecks, sessions] = await Promise.all([
+          apiClient.getWords(),
+          apiClient.getDecks(),
+          apiClient.getTrainingSessions()
+        ])
 
         setDictionary(words)
         setDecks(loadedDecks)
@@ -95,7 +94,7 @@ export const App: React.FC = () => {
     session: TrainingSession
   ): Promise<void> => {
     try {
-      const createdSession = await dataService.createTrainingSession(session)
+      const createdSession = await apiClient.createTrainingSession(session)
       setHistory((prev) => [createdSession, ...prev])
     } catch (err) {
       console.error('Failed to save training session:', err)

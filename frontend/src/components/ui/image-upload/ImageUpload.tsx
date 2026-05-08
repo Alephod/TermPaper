@@ -42,17 +42,22 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         className={`image-upload__area image-upload__area--large ${previewUrl ? 'image-upload__area--has-image' : ''}`}
       >
         {previewUrl ? (
-          <div className='image-upload__preview'>
-            <img src={previewUrl} alt='Preview' />
-            <Button
+          <>  
+          <Button
               variant='ghost'
               size='sm'
+              className='image-upload__delete-btn'
               onClick={handleRemove}
               disabled={disabled}
             >
               ✕
             </Button>
+          <div className='image-upload__preview'>
+            <img src={previewUrl} alt='Preview' />
+            
           </div>
+          </>
+          
         ) : (
           <div className='image-upload__placeholder'>
             <input

@@ -1,15 +1,16 @@
 import type React from 'react'
 import type { DictionaryEntry } from '../../types'
+import { getFullImageUrl } from '../../utils/imageUtils'
 import { Button } from '../ui/button/Button'
 import './WordList.css'
 
 export type WordListProps = {
-  words: DictionaryEntry[]
-  loading?: boolean
-  onEdit?: (entry: DictionaryEntry) => void
-  onDelete?: (id: string) => void
-  emptyMessage?: string
-  emptyDescription?: string
+	words: DictionaryEntry[]
+	loading?: boolean
+	onEdit?: (entry: DictionaryEntry) => void
+	onDelete?: (id: string) => void
+	emptyMessage?: string
+	emptyDescription?: string
 }
 
 const difficultyLabels: Record<string, string> = {
@@ -44,7 +45,7 @@ export function WordList({
             {entry.imageUrl && (
               <div className='word-entry__image'>
                 <img
-                  src={entry.imageUrl}
+                  src={getFullImageUrl(entry.imageUrl) || ''}
                   alt={entry.term}
                 />
               </div>
@@ -67,7 +68,7 @@ export function WordList({
                     onClick={() => onEdit(entry)}
                     disabled={loading}
                   >
-                    ✏️
+										✏️
                   </Button>
                 )}
                 {onDelete && (
@@ -77,7 +78,7 @@ export function WordList({
                     onClick={() => onDelete(entry.id)}
                     disabled={loading}
                   >
-                    🗑️
+										🗑️
                   </Button>
                 )}
               </div>

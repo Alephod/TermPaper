@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { TrainingQuestion } from '../../types'
+import { getFullImageUrl } from '../../utils/imageUtils'
 import { Button } from '../ui/button/Button'
 
 interface QuestionCardProps {
@@ -29,10 +30,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <div className='training__question-header'>
           <div className='training__progress'>
             <div className='training__progress-text'>
-              Вопрос {currentIndex + 1} из {totalQuestions}
+							Вопрос {currentIndex + 1} из {totalQuestions}
             </div>
             <div className='training__progress-bar'>
-              <div className='training__progress-fill' style={{ width: `${progress}%` }}></div>
+              <div
+                className='training__progress-fill'
+                style={{ width: `${progress}%` }}
+              ></div>
             </div>
           </div>
         </div>
@@ -42,22 +46,30 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             {question.promptImageUrl && (
               <div className='training__prompt-image'>
                 <img
-                  src={question.promptImageUrl}
+                  src={getFullImageUrl(question.promptImageUrl) || ''}
                   alt='Question prompt'
                   className='training__prompt-img'
                 />
               </div>
             )}
-            {question.prompt && <h2 className='training__term'>{question.prompt}</h2>}
+            {question.prompt && (
+              <h2 className='training__term'>{question.prompt}</h2>
+            )}
             <p className='training__question-hint'>
-              {question.type === 'term-to-translation' && 'Выберите правильный перевод:'}
-              {question.type === 'translation-to-term' && 'Выберите иностранное слово:'}
-              {question.type === 'image-to-term' && 'Выберите правильное слово:'}
-              {question.type === 'term-to-image' && 'Выберите правильную картинку:'}
+              {question.type === 'term-to-translation' &&
+								'Выберите правильный перевод:'}
+              {question.type === 'translation-to-term' &&
+								'Выберите иностранное слово:'}
+              {question.type === 'image-to-term' &&
+								'Выберите правильное слово:'}
+              {question.type === 'term-to-image' &&
+								'Выберите правильную картинку:'}
             </p>
           </div>
 
-          <div className={`training__options ${question.type === 'term-to-image' ? 'training__options--image-grid' : ''}`}>
+          <div
+            className={`training__options ${question.type === 'term-to-image' ? 'training__options--image-grid' : ''}`}
+          >
             {question.options.map((option) => {
               const isSelected = selectedOptionId === option.id
               const isCorrectOption = option.id === question.correctOptionId
@@ -74,7 +86,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 optionClass += ' training__option--selected'
               }
 
-              const isImageOption = question.type === 'term-to-image' && !!option.imageUrl
+              const isImageOption =
+								question.type === 'term-to-image' && !!option.imageUrl
 
               return (
                 <button
@@ -86,7 +99,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 >
                   {isImageOption ? (
                     <img
-                      src={option.imageUrl || ''}
+                      src={getFullImageUrl(option.imageUrl || null) || ''}
                       alt={option.text}
                       className='training__option-image'
                     />
@@ -107,8 +120,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               ) : (
                 <div className='training__feedback-wrong'>
                   <span>
-                    Неверно. Правильный ответ:{' '}
-                    {question.options.find((o) => o.id === question.correctOptionId)?.text}
+										Неверно. Правильный ответ:{' '}
+                    {
+                      question.options.find(
+                        (o) => o.id === question.correctOptionId
+                      )?.text
+                    }
                   </span>
                 </div>
               )}

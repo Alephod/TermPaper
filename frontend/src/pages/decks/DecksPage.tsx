@@ -3,19 +3,18 @@ import { useState } from 'react'
 import { DeckList } from '../../components/deck-list/DeckList'
 import { Button } from '../../components/ui/button/Button'
 import { Input } from '../../components/ui/input/Input'
-import { ApiError } from '../../services/api'
-import { dataService } from '../../services/dataService'
+import { ApiError, apiClient } from '../../services/api'
 import type { DictionaryDeck, DictionaryEntry } from '../../types'
 
 import './DecksPage.css'
 
 type DecksPageProps = {
-  dictionary: DictionaryEntry[];
-  decks: DictionaryDeck[];
-  onUpdateDecks: (decks: DictionaryDeck[]) => void;
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
-  onStartTraining: (deckId?: string) => void;
-};
+  dictionary: DictionaryEntry[]
+  decks: DictionaryDeck[]
+  onUpdateDecks: (decks: DictionaryDeck[]) => void
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void
+  onStartTraining: (deckId?: string) => void
+}
 
 export const DecksPage: React.FC<DecksPageProps> = ({
   dictionary,
@@ -37,13 +36,8 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.createDeck({
-        name: trimmedName
-      })
-
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
-      onUpdateDecks(refreshedDecks)
+      const newDeck = await apiClient.createDeck({ name: trimmedName })
+      onUpdateDecks([...decks, newDeck])
 
       setNewDeckName('')
     } catch (err) {
@@ -66,7 +60,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      const updated = await dataService.updateDeck(deckId, {
+      const updated = await apiClient.updateDeck(deckId, {
         name: trimmedName
       })
 
@@ -92,7 +86,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.deleteDeck(deckId)
+      await apiClient.deleteDeck(deckId)
 
       const updated = decks.filter((deck) => deck.id !== deckId)
 
@@ -121,10 +115,13 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.removeWordFromDeck(deckId, wordId)
+      await apiClient.removeWordFromDeck(deckId, wordId)
 
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
+      const refreshedDecks = decks.map((deck) =>
+        deck.id === deckId
+          ? { ...deck, wordIds: deck.wordIds.filter((id) => id !== wordId) }
+          : deck
+      )
       onUpdateDecks(refreshedDecks)
     } catch (err) {
       console.error('Failed to remove word from deck:', err)
@@ -146,10 +143,13 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.addExistingWordToDeck(deckId, wordId)
+      await apiClient.addExistingWordToDeck(deckId, wordId)
 
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
+      const refreshedDecks = decks.map((deck) =>
+        deck.id === deckId
+          ? { ...deck, wordIds: [...deck.wordIds, wordId] }
+          : deck
+      )
       onUpdateDecks(refreshedDecks)
     } catch (err) {
       console.error('Failed to add existing word to deck:', err)
@@ -169,7 +169,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
         <div className='decks__hero-content'>
           <h1 className='decks__title'>🎴 Колоды</h1>
           <p className='decks__subtitle'>
-            Организуйте слова в колоды для целенаправленных тренировок
+						Организуйте слова в колоды для целенаправленных тренировок
           </p>
 
           <div className='decks__stats'>
@@ -218,7 +218,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
               loading={loading}
               size='lg'
             >
-              Создать колоду
+							Создать колоду
             </Button>
           </div>
         </div>

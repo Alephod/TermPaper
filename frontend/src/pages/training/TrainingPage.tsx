@@ -208,15 +208,10 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({
 
     // Загрузка слов для повторения
     try {
-      const words = await apiClient.getWordsForReview(
+      const sm2Words = await apiClient.getWordsForReview(
         deckWordIds,
         MAX_WORDS_PER_TRAINING
       )
-      const dictionaryEntries = words.map((w) =>
-        apiClient.wordToDictionaryEntry(w)
-      )
-
-      const sm2Words = dictionaryEntries
       const needed = Math.min(MAX_WORDS_PER_TRAINING - sm2Words.length, trainingDictionary.length)
       const additionalWords = trainingDictionary
         .filter(w => !sm2Words.some(sm2 => sm2.id === w.id)) // исключаем дубликаты

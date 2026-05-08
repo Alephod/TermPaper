@@ -1,25 +1,16 @@
 import type {
-  Deck,
   DictionaryDeck,
   DictionaryEntry,
   Difficulty,
-  TrainingSession,
-  Word
+  TrainingSession
 } from '../types'
 
-export const API_BASE_URL =
-	import.meta.env.VITE_API_URL || 'http://localhost:5000'
+import { API_BASE_URL } from '../utils/imageUtils'
+
 const API_BASE_ENDPOINT = `${API_BASE_URL}/api`
 const UPLOAD_ENDPOINT = `${API_BASE_URL}/uploads`
 
-export const extractRelativeImagePath = (
-  fullUrl: string | null
-): string | null => {
-  if (!fullUrl) return null
-  // Извлекаем только имя файла
-  const parts = fullUrl.split('/')
-  return parts[parts.length - 1] || null
-}
+export { API_BASE_URL }
 
 class ApiError extends Error {
   constructor(
@@ -55,26 +46,7 @@ class ApiClient {
         headers
       })
 
-      if (!response.ok) {
-        let errorData
-        try {
-          errorData = await response.json()
-        } catch {
-          errorData = { error: 'Unknown error' }
-        }
-
-        throw new ApiError(
-          errorData.error || `HTTP ${response.status}`,
-          response.status,
-          errorData
-        )
-      }
-
-      if (response.status === 204) {
-        return null as T
-      }
-
-      return await response.json()
+      return this.parseResponse(response)
     } catch (error) {
       if (error instanceof ApiError) {
         throw error
@@ -85,25 +57,52 @@ class ApiClient {
     }
   }
 
+  private async parseResponse(response: Response): Promise<any> {
+    if (!response.ok) {
+      let errorData: { error?: string; [key: string]: unknown }
+      try {
+        errorData = await response.json() as typeof errorData
+      } catch {
+        errorData = { error: 'Unknown error' }
+      }
+      throw new ApiError(
+        errorData.error || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    if (response.status === 204) {
+      return null
+    }
+
+    return await response.json()
+  }
+
   // Words API
-  async getWords(difficulty?: Difficulty): Promise<Word[]> {
+  async getWords(difficulty?: Difficulty): Promise<DictionaryEntry[]> {
     const params = difficulty ? `?difficulty=${difficulty}` : ''
-    return this.request<Word[]>(`/words${params}`)
+    return this.request<DictionaryEntry[]>(`/words${params}`)
   }
 
-  async getWord(id: string): Promise<Word> {
-    return this.request<Word>(`/words/${id}`)
+  async getWord(id: string): Promise<DictionaryEntry> {
+    return this.request<DictionaryEntry>(`/words/${id}`)
   }
 
-  async createWord(word: Omit<Word, 'id'>): Promise<Word> {
-    return this.request<Word>('/words', {
+  async createWord(
+    word: Omit<DictionaryEntry, 'id' | 'imageUrl'>
+  ): Promise<DictionaryEntry> {
+    return this.request<DictionaryEntry>('/words', {
       method: 'POST',
       body: JSON.stringify(word)
     })
   }
 
-  async updateWord(id: string, updates: Partial<Word>): Promise<Word> {
-    return this.request<Word>(`/words/${id}`, {
+  async updateWord(
+    id: string,
+    updates: Partial<DictionaryEntry>
+  ): Promise<DictionaryEntry> {
+    return this.request<DictionaryEntry>(`/words/${id}`, {
       method: 'PUT',
       body: JSON.stringify(updates)
     })
@@ -122,16 +121,16 @@ class ApiClient {
   }
 
   // Decks API
-  async getDecks(): Promise<Deck[]> {
-    return this.request<Deck[]>('/decks')
+  async getDecks(): Promise<DictionaryDeck[]> {
+    return this.request<DictionaryDeck[]>('/decks')
   }
 
-  async getDeck(id: string): Promise<Deck> {
-    return this.request<Deck>(`/decks/${id}`)
+  async getDeck(id: string): Promise<DictionaryDeck> {
+    return this.request<DictionaryDeck>(`/decks/${id}`)
   }
 
-  async createDeck(deck: { name: string }): Promise<Deck> {
-    return this.request<Deck>('/decks', {
+  async createDeck(deck: { name: string }): Promise<DictionaryDeck> {
+    return this.request<DictionaryDeck>('/decks', {
       method: 'POST',
       body: JSON.stringify(deck)
     })
@@ -140,8 +139,8 @@ class ApiClient {
   async updateDeck(
     id: string,
     updates: { name?: string; wordIds?: string[] }
-  ): Promise<Deck> {
-    return this.request<Deck>(`/decks/${id}`, {
+  ): Promise<DictionaryDeck> {
+    return this.request<DictionaryDeck>(`/decks/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(updates)
     })
@@ -155,9 +154,9 @@ class ApiClient {
 
   async createWordInDeck(
     deckId: string,
-    word: Omit<Word, 'id'>
-  ): Promise<{ word: Word; deck: Deck }> {
-    return this.request<{ word: Word; deck: Deck }>(
+    word: Omit<DictionaryEntry, 'id' | 'imageUrl'>
+  ): Promise<{ word: DictionaryEntry; deck: DictionaryDeck }> {
+    return this.request<{ word: DictionaryEntry; deck: DictionaryDeck }>(
       `/decks/${deckId}/words/new`,
       {
         method: 'POST',
@@ -166,8 +165,11 @@ class ApiClient {
     )
   }
 
-  async addExistingWordToDeck(deckId: string, wordId: string): Promise<Deck> {
-    return this.request<Deck>(`/decks/${deckId}/words`, {
+  async addExistingWordToDeck(
+    deckId: string,
+    wordId: string
+  ): Promise<DictionaryDeck> {
+    return this.request<DictionaryDeck>(`/decks/${deckId}/words`, {
       method: 'POST',
       body: JSON.stringify({ wordId })
     })
@@ -190,21 +192,7 @@ class ApiClient {
       body: formData
     })
 
-    if (!response.ok) {
-      let errorData
-      try {
-        errorData = await response.json()
-      } catch {
-        errorData = { error: 'Unknown error' }
-      }
-      throw new ApiError(
-        errorData.error || `HTTP ${response.status}`,
-        response.status,
-        errorData
-      )
-    }
-
-    return await response.json()
+    return this.parseResponse(response)
   }
 
   // Training Sessions API
@@ -222,8 +210,11 @@ class ApiClient {
   }
 
   // SM-2 API
-  async getWordsForReview(wordIds: string[], limit?: number): Promise<Word[]> {
-    return this.request<Word[]>('/training/words-for-review', {
+  async getWordsForReview(
+    wordIds: string[],
+    limit?: number
+  ): Promise<DictionaryEntry[]> {
+    return this.request<DictionaryEntry[]>('/training/words-for-review', {
       method: 'POST',
       body: JSON.stringify({ wordIds, limit })
     })
@@ -233,7 +224,7 @@ class ApiClient {
     wordId: string,
     quality: number
   ): Promise<{
-    word: Word
+    word: DictionaryEntry
     previous: {
       easinessFactor: number
       interval: number
@@ -263,77 +254,6 @@ class ApiClient {
     }>('/training/stats')
   }
 
-  // Helper methods to convert between API types and frontend types
-  wordToDictionaryEntry(word: any): DictionaryEntry {
-    const imagePath = word.imageUrl || word.image_url || null
-    // Convert relative paths to full URLs
-    const fullImageUrl =
-			imagePath && imagePath.startsWith('/')
-			  ? `${API_BASE_URL}${imagePath}`
-			  : imagePath
-
-    return {
-      id: word.id,
-      term: word.term,
-      translation: word.translation,
-      difficulty: word.difficulty as Difficulty,
-      example: word.example || '',
-      exampleTranslation:
-			word.exampleTranslation || word.example_translation || '',
-      imageUrl: fullImageUrl,
-      sm2EasinessFactor: word.sm2EasinessFactor ?? null,
-      sm2Interval: word.sm2Interval ?? null,
-      sm2Repetitions: word.sm2Repetitions ?? null,
-      sm2NextReview: word.sm2NextReview ?? null,
-      sm2LastReview: word.sm2LastReview ?? null
-    }
-  }
-
-  dictionaryEntryToWord(entry: Omit<DictionaryEntry, 'id'>): {
-		term: string;
-		translation: string;
-		difficulty: Difficulty;
-		example: string;
-		exampleTranslation: string;
-		imagePath?: string | null;
-	} {
-    return {
-      term: entry.term,
-      translation: entry.translation,
-      difficulty: entry.difficulty,
-      example: entry.example,
-      exampleTranslation: entry.exampleTranslation,
-      imagePath: entry.imagePath || null
-    }
-  }
-
-  deckToDictionaryDeck(deck: any): DictionaryDeck {
-    return {
-      id: deck.id,
-      name: deck.name,
-      wordIds: deck.wordIds || []
-    }
-  }
-
-  trainingSessionToTrainingSession(session: any): TrainingSession {
-    return {
-      id: session.id,
-      date: session.date,
-      totalQuestions: session.totalQuestions,
-      correctAnswers: session.correctAnswers,
-      accuracy: session.accuracy,
-      correctWordIds: session.correctWordIds || [],
-      wrongWordIds: session.wrongWordIds || []
-    }
-  }
-
-  dictionaryDeckToDeck(deck: Omit<DictionaryDeck, 'id' | 'wordIds'>): {
-		name: string;
-	} {
-    return {
-      name: deck.name
-    }
-  }
 }
 
 export const apiClient = new ApiClient()

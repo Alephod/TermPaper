@@ -100,12 +100,12 @@ export const TrainingIdle: React.FC<TrainingIdleProps> = ({
           <div className='training__difficulty-info'>
             {wordsDueToday === 0 && (
               <p className='training__sm2-message'>
-                Слов на повторение нет. Тренировка по всем словам в словаре
+                Слов для повторения сегодня нет. Тренировка по всем словам в словаре
               </p>
             )}
             {wordsDueToday > 0 && (
               <h3 className='training__sm2-message'>
-                Слов на повторение:
+                Слов на повторение сегодня:
               </h3>
             )}
             <div className='training__sm2-progress'>
