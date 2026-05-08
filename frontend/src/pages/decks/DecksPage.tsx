@@ -3,71 +3,30 @@ import { useState } from 'react'
 import { DeckList } from '../../components/deck-list/DeckList'
 import { Button } from '../../components/ui/button/Button'
 import { Input } from '../../components/ui/input/Input'
-import { Select } from '../../components/ui/select/Select'
-import { ApiError } from '../../services/api'
-import { dataService } from '../../services/dataService'
-import type { DictionaryDeck, DictionaryEntry, Difficulty } from '../../types'
+import { ApiError, apiClient } from '../../services/api'
+import type { DictionaryDeck, DictionaryEntry } from '../../types'
 
 import './DecksPage.css'
 
 type DecksPageProps = {
-  dictionary: DictionaryEntry[];
-
-  decks: DictionaryDeck[];
-
-  onUpdateDecks: (decks: DictionaryDeck[]) => void;
-
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
-
-  onStartTraining: (deckId?: string) => void;
-};
-
-type NewWordFormState = {
-  term: string;
-
-  translation: string;
-
-  example: string;
-
-  exampleTranslation: string;
-
-  difficulty: Difficulty;
-};
-
-const buildEmptyWordForm = (): NewWordFormState => ({
-  term: '',
-  translation: '',
-  example: '',
-  exampleTranslation: '',
-  difficulty: 'easy'
-})
+  dictionary: DictionaryEntry[]
+  decks: DictionaryDeck[]
+  onUpdateDecks: (decks: DictionaryDeck[]) => void
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void
+  onStartTraining: (deckId?: string) => void
+}
 
 export const DecksPage: React.FC<DecksPageProps> = ({
   dictionary,
   decks,
   onUpdateDecks,
-  onUpdateDictionary,
   onStartTraining
 }) => {
   const [expandedDeckId, setExpandedDeckId] = useState<string | null>(null)
   const [newDeckName, setNewDeckName] = useState<string>('')
-  const [editingDeckId, setEditingDeckId] = useState<string | null>(null)
   const [editingDeckName, setEditingDeckName] = useState<string>('')
-
-  const [wordForms, setWordForms] = useState<{
-    [deckId: string]: NewWordFormState;
-  }>({})
-
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-
-  const getWordsForDeck = (deckId: string): DictionaryEntry[] => {
-    const deck = decks.find((d) => d.id === deckId)
-
-    if (!deck) return []
-
-    return dictionary.filter((word) => deck.wordIds.includes(word.id))
-  }
 
   const handleCreateDeck = async (): Promise<void> => {
     const trimmedName = newDeckName.trim()
@@ -77,13 +36,8 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.createDeck({
-        name: trimmedName
-      })
-
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
-      onUpdateDecks(refreshedDecks)
+      const newDeck = await apiClient.createDeck({ name: trimmedName })
+      onUpdateDecks([...decks, newDeck])
 
       setNewDeckName('')
     } catch (err) {
@@ -106,7 +60,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      const updated = await dataService.updateDeck(deckId, {
+      const updated = await apiClient.updateDeck(deckId, {
         name: trimmedName
       })
 
@@ -114,7 +68,6 @@ export const DecksPage: React.FC<DecksPageProps> = ({
         deck.id === deckId ? updated : deck
       )
       onUpdateDecks(newDecks)
-      setEditingDeckId(null)
       setEditingDeckName('')
     } catch (err) {
       console.error('Failed to rename deck:', err)
@@ -133,7 +86,7 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.deleteDeck(deckId)
+      await apiClient.deleteDeck(deckId)
 
       const updated = decks.filter((deck) => deck.id !== deckId)
 
@@ -154,52 +107,6 @@ export const DecksPage: React.FC<DecksPageProps> = ({
     }
   }
 
-  const handleAddWordToDeck = async (deckId: string): Promise<void> => {
-    const form = wordForms[deckId]
-    if (!form || !form.term.trim() || !form.translation.trim()) return
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Создаем слово в колоде
-      const result = await dataService.createWordInDeck(deckId, {
-        term: form.term.trim(),
-        translation: form.translation.trim(),
-        example: form.example.trim(),
-        exampleTranslation: form.exampleTranslation.trim(),
-        difficulty: form.difficulty
-      })
-
-      // Обновляем словарь только если слова ещё нет
-
-      if (!dictionary.some((w) => w.id === result.word.id)) {
-        onUpdateDictionary([...dictionary, result.word])
-      }
-
-      // Обновляем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
-      onUpdateDecks(refreshedDecks)
-
-      // Очищаем форму
-
-      setWordForms((prev) => ({
-        ...prev,
-        [deckId]: buildEmptyWordForm()
-      }))
-    } catch (err) {
-      console.error('Failed to add word to deck:', err)
-
-      if (err instanceof ApiError) {
-        setError(`Failed to add word: ${err.message}`)
-      } else {
-        setError('Failed to add word')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleRemoveWordFromDeck = async (
     deckId: string,
     wordId: string
@@ -208,10 +115,13 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.removeWordFromDeck(deckId, wordId)
+      await apiClient.removeWordFromDeck(deckId, wordId)
 
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
+      const refreshedDecks = decks.map((deck) =>
+        deck.id === deckId
+          ? { ...deck, wordIds: deck.wordIds.filter((id) => id !== wordId) }
+          : deck
+      )
       onUpdateDecks(refreshedDecks)
     } catch (err) {
       console.error('Failed to remove word from deck:', err)
@@ -233,10 +143,13 @@ export const DecksPage: React.FC<DecksPageProps> = ({
       setLoading(true)
       setError(null)
 
-      await dataService.addExistingWordToDeck(deckId, wordId)
+      await apiClient.addExistingWordToDeck(deckId, wordId)
 
-      // Перезагружаем колоды с бэкенда
-      const refreshedDecks = await dataService.loadDecks()
+      const refreshedDecks = decks.map((deck) =>
+        deck.id === deckId
+          ? { ...deck, wordIds: [...deck.wordIds, wordId] }
+          : deck
+      )
       onUpdateDecks(refreshedDecks)
     } catch (err) {
       console.error('Failed to add existing word to deck:', err)
@@ -250,36 +163,13 @@ export const DecksPage: React.FC<DecksPageProps> = ({
     }
   }
 
-  const getAvailableWordsForDeck = (deckId: string): DictionaryEntry[] => {
-    const deck = decks.find((d) => d.id === deckId)
-
-    if (!deck) return []
-
-    return dictionary.filter((word) => !deck.wordIds.includes(word.id))
-  }
-
-  const handleWordFormChange = (
-    deckId: string,
-    field: keyof NewWordFormState,
-    value: string
-  ): void => {
-    setWordForms((prev) => ({
-      ...prev,
-      [deckId]: {
-        ...(prev[deckId] || buildEmptyWordForm()),
-
-        [field]: value
-      }
-    }))
-  }
-
   return (
     <div className='decks-page'>
       <div className='decks__hero'>
         <div className='decks__hero-content'>
           <h1 className='decks__title'>🎴 Колоды</h1>
           <p className='decks__subtitle'>
-            Организуйте слова в колоды для целенаправленных тренировок
+						Организуйте слова в колоды для целенаправленных тренировок
           </p>
 
           <div className='decks__stats'>
@@ -326,8 +216,9 @@ export const DecksPage: React.FC<DecksPageProps> = ({
               onClick={handleCreateDeck}
               disabled={loading || !newDeckName.trim()}
               loading={loading}
+              size='lg'
             >
-              Создать колоду
+							Создать колоду
             </Button>
           </div>
         </div>
@@ -343,6 +234,8 @@ export const DecksPage: React.FC<DecksPageProps> = ({
           onStartTraining={onStartTraining}
           onDeleteDeck={handleDeleteDeck}
           onRenameDeck={handleRenameDeck}
+          onAddWordToDeck={handleAddExistingWordToDeck}
+          onRemoveWordFromDeck={handleRemoveWordFromDeck}
           expandedDeckId={expandedDeckId}
           onToggleExpand={(deckId) =>
             setExpandedDeckId(expandedDeckId === deckId ? null : deckId)

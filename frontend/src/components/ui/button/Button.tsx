@@ -1,4 +1,3 @@
-import React from 'react'
 import './Button.css'
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'

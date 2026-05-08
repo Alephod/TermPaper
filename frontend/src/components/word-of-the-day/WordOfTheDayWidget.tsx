@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react'
+import type React from 'react'
+import { useMemo } from 'react'
 import type { DictionaryEntry } from '../../types'
 import './WordOfTheDayWidget.css'
 
 type WordOfTheDayWidgetProps = {
-  dictionary: DictionaryEntry[]
+	dictionary: DictionaryEntry[]
 }
 
 const buildIndexForToday = (length: number): number => {
@@ -12,20 +13,15 @@ const buildIndexForToday = (length: number): number => {
   }
 
   const todayString = new Date().toISOString().slice(0, 10)
-  const charCodes = todayString
-    .split('')
-    .map(char => char.charCodeAt(0))
-  const sum = charCodes.reduce(
-    (accumulator, code) => accumulator + code,
-    0
-  )
+  const charCodes = todayString.split('').map((char) => char.charCodeAt(0))
+  const sum = charCodes.reduce((accumulator, code) => accumulator + code, 0)
 
   return sum % length
 }
 
-export const WordOfTheDayWidget: React.FC<
-  WordOfTheDayWidgetProps
-> = ({ dictionary }) => {
+export const WordOfTheDayWidget: React.FC<WordOfTheDayWidgetProps> = ({
+  dictionary
+}) => {
   const wordOfTheDay = useMemo(() => {
     if (dictionary.length === 0) {
       return undefined
@@ -49,9 +45,7 @@ export const WordOfTheDayWidget: React.FC<
       <div className='word-day__card'>
         <div className='word-day__card-front'>
           <div className='word-day__label'>Слово дня</div>
-          <div className='word-day__term'>
-            {wordOfTheDay.term}
-          </div>
+          <div className='word-day__term'>{wordOfTheDay.term}</div>
           <div className='word-day__hint'>Наведите, чтобы увидеть перевод</div>
         </div>
         <div className='word-day__card-back'>

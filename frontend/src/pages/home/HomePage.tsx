@@ -140,7 +140,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </Button>
 
           <Button variant='secondary' size='lg' onClick={handleQuickAddWord}>
-            ➕ Добавить слово
+            Добавить слово
           </Button>
         </div>
       </section>

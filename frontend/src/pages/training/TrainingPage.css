@@ -6,10 +6,10 @@
 .training__hero {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 80px 40px;
+  padding: 70px 40px;
   border-radius: var(--radius-lg);
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 20px;
 }
 
 .training__title {
@@ -312,6 +312,7 @@
   justify-content: space-between;
   align-items: center;
   text-align: left;
+  font-weight: 400;
 }
 
 .training__option:hover:not(:disabled) {
@@ -461,4 +462,21 @@
     width: 200px;
     height: 200px;
   }
+}
+
+.training__sm2-progress {
+  display: flex;
+  gap: 25px;
+  margin-top: 25px;
+  justify-content: center;
+}
+
+.training__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.training__sm2-message {
+  margin: 0 0 10px;
 }

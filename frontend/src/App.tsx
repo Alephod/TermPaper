@@ -2,12 +2,12 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
+import { Button } from './components/ui/button/Button'
 import { DecksPage } from './pages/decks/DecksPage'
 import { DictionaryPage } from './pages/dictionary/DictionaryPage'
 import { HomePage } from './pages/home/HomePage'
 import { TrainingPage } from './pages/training/TrainingPage'
-import { ApiError } from './services/api'
-import { dataService } from './services/dataService'
+import { ApiError, apiClient } from './services/api'
 import type { DictionaryDeck, DictionaryEntry, TrainingSession } from './types'
 
 export const App: React.FC = () => {
@@ -24,11 +24,11 @@ export const App: React.FC = () => {
         setLoading(true)
         setError(null)
 
-        const {
-          words,
-          decks: loadedDecks,
-          sessions
-        } = await dataService.initializeData()
+        const [words, loadedDecks, sessions] = await Promise.all([
+          apiClient.getWords(),
+          apiClient.getDecks(),
+          apiClient.getTrainingSessions()
+        ])
 
         setDictionary(words)
         setDecks(loadedDecks)
@@ -94,7 +94,7 @@ export const App: React.FC = () => {
     session: TrainingSession
   ): Promise<void> => {
     try {
-      const createdSession = await dataService.createTrainingSession(session)
+      const createdSession = await apiClient.createTrainingSession(session)
       setHistory((prev) => [createdSession, ...prev])
     } catch (err) {
       console.error('Failed to save training session:', err)
@@ -114,13 +114,13 @@ export const App: React.FC = () => {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>
-        <button onClick={() => window.location.reload()}>Retry</button>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
       </div>
     )
   }
 
   return (
-    <Layout isDictionaryError={!!error} isHistoryError={!!error}>
+    <Layout isDictionaryError={!!error}>
       <Routes>
         <Route
           path='/'

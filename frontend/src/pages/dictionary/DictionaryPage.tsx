@@ -1,50 +1,42 @@
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Button } from '../../components/ui/button/Button'
 import { ImageUpload } from '../../components/ui/image-upload/ImageUpload'
 import { Input } from '../../components/ui/input/Input'
 import { Select } from '../../components/ui/select/Select'
 import { WordList } from '../../components/word-list/WordList'
-import { ApiError, apiClient, extractRelativeImagePath } from '../../services/api'
-import { dataService } from '../../services/dataService'
+import { ApiError, apiClient } from '../../services/api'
 import type {
   DictionaryDeck,
   DictionaryEntry,
   Difficulty,
   FilterDifficulty
 } from '../../types'
+import {
+  extractRelativeImagePath,
+  getFullImageUrl
+} from '../../utils/imageUtils'
 
 import './DictionaryPage.css'
 
 type DictionaryPageProps = {
-  dictionary: DictionaryEntry[];
-
-  decks: DictionaryDeck[];
-
-  onUpdateDictionary: (entries: DictionaryEntry[]) => void;
-
-  onUpdateDecks: (decks: DictionaryDeck[]) => void;
-
-  hasError: boolean;
-};
+  dictionary: DictionaryEntry[]
+  decks: DictionaryDeck[]
+  onUpdateDictionary: (entries: DictionaryEntry[]) => void
+  onUpdateDecks: (decks: DictionaryDeck[]) => void
+  hasError: boolean
+}
 
 type FormState = {
-  id: string | null;
-
-  term: string;
-
-  translation: string;
-
-  example: string;
-
-  exampleTranslation: string;
-
-  difficulty: Difficulty;
-
-  imageUrl: string | null;
-
-  imageFile: File | null;
-};
+  id: string | null
+  term: string
+  translation: string
+  example: string
+  exampleTranslation: string
+  difficulty: Difficulty
+  imageUrl: string | null
+  imageFile: File | null
+}
 
 const buildEmptyFormState = (): FormState => ({
   id: null,
@@ -54,7 +46,6 @@ const buildEmptyFormState = (): FormState => ({
   exampleTranslation: '',
   difficulty: 'easy',
   imageUrl: null,
-
   imageFile: null
 })
 
@@ -66,6 +57,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
 
   hasError
 }) => {
+  const filterId = useId()
   const [filter, setFilter] = useState<FilterDifficulty>('all')
   const [formState, setFormState] = useState<FormState>(buildEmptyFormState())
   const [loading, setLoading] = useState<boolean>(false)
@@ -95,7 +87,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       imageUrl: entry.imageUrl || null,
       imageFile: null
     })
-    setImagePreview(entry.imageUrl || null)
+    setImagePreview(getFullImageUrl(entry.imageUrl || null))
   }
 
   const handleImageSelect = (file: File): void => {
@@ -118,7 +110,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await dataService.deleteWord(id)
+      await apiClient.deleteWord(id)
 
       const updated = dictionary.filter((entry) => entry.id !== id)
 
@@ -139,7 +131,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await dataService.clearWords()
+      await apiClient.clearWords()
       onUpdateDictionary([])
       onUpdateDecks(
         decks.map((deck) => ({
@@ -190,17 +182,16 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
       }
 
       if (formState.id) {
-        const updated = await dataService.updateWord(formState.id, wordData)
+        const updated = await apiClient.updateWord(formState.id, wordData)
 
         const newDictionary = dictionary.map((entry) =>
           entry.id === formState.id ? updated : entry
         )
         onUpdateDictionary(newDictionary)
       } else {
-        const newEntry = await dataService.createWord(wordData)
+        const newEntry = await apiClient.createWord(wordData)
 
         // Проверяем, что слово еще не добавлено в UI
-
         if (!dictionary.some((entry) => entry.id === newEntry.id)) {
           onUpdateDictionary([...dictionary, newEntry])
         }
@@ -226,8 +217,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         <div className='dictionary__hero-content'>
           <h1 className='dictionary__title'>📝 Словарь</h1>
           <p className='dictionary__subtitle'>
-            Управляйте вашим словарем: добавляйте, редактируйте и удаляйте слова
-            для тренировок
+						Управляйте вашим словарем: добавляйте, редактируйте и удаляйте слова
+						для тренировок
           </p>
 
           <div className='dictionary__stats'>
@@ -271,8 +262,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
               <h3>Ошибка загрузки данных</h3>
 
               <p>
-                Не удалось корректно прочитать словарь. Вы можете очистить его и
-                начать заново.
+								Не удалось корректно прочитать словарь. Вы можете очистить его и
+								начать заново.
               </p>
             </div>
             <Button
@@ -281,7 +272,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
               disabled={loading}
               loading={loading}
             >
-              Очистить словарь
+							Очистить словарь
             </Button>
           </div>
         </div>
@@ -406,7 +397,7 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                   }}
                   disabled={loading}
                 >
-                  Отмена
+									Отмена
                 </Button>
 
                 <Button
@@ -414,8 +405,8 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
                   variant='primary'
                   disabled={
                     loading ||
-                    !formState.term.trim() ||
-                    !formState.translation.trim()
+										!formState.term.trim() ||
+										!formState.translation.trim()
                   }
                   loading={loading}
                 >
@@ -431,11 +422,12 @@ export const DictionaryPage: React.FC<DictionaryPageProps> = ({
         <div className='dictionary__section-header'>
           <h2 className='dictionary__section-title'>📚 Все слова</h2>
           <div className='dictionary__filter'>
-            <label className='dictionary__filter-label'>
-              Фильтр по сложности:
+            <label htmlFor={filterId} className='dictionary__filter-label'>
+							Фильтр по сложности:
             </label>
 
             <Select
+              id={filterId}
               value={filter}
               onChange={(event) =>
                 handleChangeFilter(event.target.value as FilterDifficulty)

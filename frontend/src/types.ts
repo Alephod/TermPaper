@@ -27,6 +27,11 @@ export type DictionaryEntry = {
   exampleTranslation: string
   imageUrl?: string | null
   imagePath?: string | null
+  sm2EasinessFactor?: number | null
+  sm2Interval?: number | null
+  sm2Repetitions?: number | null
+  sm2NextReview?: string | null
+  sm2LastReview?: string | null
 }
 
 export type DictionaryDeck = {
